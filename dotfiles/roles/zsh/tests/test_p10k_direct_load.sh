@@ -46,7 +46,15 @@ stdin_file="$tmp_dir/stdin.zsh"
 : > "$stdin_file"
 check='(( $+functions[p10k] )) && (( $+functions[_p9k_precmd] )) && [[ $PROMPT == p10k\>\  ]]'
 
+run_pty() {
+  local cmd="$1"
+  case "$(uname -s)" in
+    Darwin) script -q /dev/null sh -c "$cmd" >/dev/null ;;
+    *) script -qfc "$cmd" /dev/null >/dev/null ;;
+  esac
+}
+
 # shellcheck disable=SC2016
-script -qfc "env HOME='$home_dir' XDG_DATA_HOME='$data_dir' XDG_CACHE_HOME='$cache_dir' ZDOTDIR='$home_dir' PATH='/usr/bin:/bin' '$zsh_bin' -i -c '$check'" /dev/null >/dev/null
-script -qfc "env HOME='$home_dir' XDG_DATA_HOME='$data_dir' XDG_CACHE_HOME='$cache_dir' ZDOTDIR='$home_dir' PATH='/usr/bin:/bin' '$zsh_bin' -i -c '$check' < '$stdin_file'" /dev/null >/dev/null
-script -qfc "env HOME='$home_dir' XDG_DATA_HOME='$data_dir' XDG_CACHE_HOME='$cache_dir' ZDOTDIR='$home_dir' PATH='/usr/bin:/bin' '$zsh_bin' -i -c '$check' > '$tmp_dir/stdout' 2> '$tmp_dir/stderr'" /dev/null >/dev/null
+run_pty "env -u CURSOR_AGENT HOME='$home_dir' XDG_DATA_HOME='$data_dir' XDG_CACHE_HOME='$cache_dir' ZDOTDIR='$home_dir' PATH='/usr/bin:/bin' '$zsh_bin' -i -c '$check'"
+run_pty "env -u CURSOR_AGENT HOME='$home_dir' XDG_DATA_HOME='$data_dir' XDG_CACHE_HOME='$cache_dir' ZDOTDIR='$home_dir' PATH='/usr/bin:/bin' '$zsh_bin' -i -c '$check' < '$stdin_file'"
+run_pty "env -u CURSOR_AGENT HOME='$home_dir' XDG_DATA_HOME='$data_dir' XDG_CACHE_HOME='$cache_dir' ZDOTDIR='$home_dir' PATH='/usr/bin:/bin' '$zsh_bin' -i -c '$check' > '$tmp_dir/stdout' 2> '$tmp_dir/stderr'"
