@@ -47,18 +47,17 @@
       changed_when: false
       failed_when: false
 
+    - name: "Go-Lang | Compute missing dependencies"
+      ansible.builtin.set_fact:
+        go_missing_tools: "{{ tool_check.results | selectattr('rc', 'ne', 0) | map(attribute='item') | list }}"
+
     - name: "Go-Lang | Report missing dependencies"
       ansible.builtin.debug:
         msg:
-          - "⚠️  Missing required tools for Go installation:"
-          - "{% for result in tool_check.results %}"
-          - "{% if result.rc != 0 %}"
-          - "- {{ result.item }}"
-          - "{% endif %}"
-          - "{% endfor %}"
+          - "⚠️  Missing required tools for Go installation: {{ go_missing_tools | join(', ') }}"
           - ""
           - "Please install these tools or ask your system administrator."
-      when: tool_check.results | selectattr('rc', 'ne', 0) | list | length > 0
+      when: go_missing_tools | length > 0
 - name: "Go-Lang | Define GOARCH"
   ansible.builtin.set_fact:
     goarch: "{{ ansible_facts['machine'] | replace('x86_64', 'amd64') | replace('aarch64', 'arm64') }}"
