@@ -1,0 +1,5 @@
+---
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Install VS Code"
+  community.general.homebrew_cask:
+    name: visual-studio-code
+    state: present

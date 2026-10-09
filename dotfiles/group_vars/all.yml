@@ -10,44 +10,109 @@ arch_pacman_upgrade_extra_args: "--disable-download-timeout"
 # --------------------------------------------------------------------
 # Roles run in this order when you execute `dotfiles`.
 # Run a subset with: dotfiles -t git,neovim
+# Roles only run the task file for the current distro (Archlinux/Ubuntu/
+# Fedora/MacOSX); a role without a task file for your distro is skipped
+# silently. macOS-only roles skip automatically on Linux and vice versa.
 
 default_roles:
-  # Core
+  # === Core ===
   - system
   - 1password  # installed early so secret-backed roles can read the vault
   - fonts
   - git
   - bash
-  # Editors & terminal
+  # === Editors & terminals ===
   - neovim
+  - vscode
+  - kitty
   - tmux
   - fzf
   - starship
-  # File tools
+  # === File tools ===
   - bat
   - lsd
   - zoxide
   - btop
   - ncdu
-  # Git workflow
+  # === Git workflow ===
   - gh
   - lazygit
-  # Languages
+  - jj
+  - worktrunk
+  # === Languages ===
   - python
   - nvm  # Must run before npm
   - npm
   - go
   - rust
-  # Infrastructure
+  - lua
+  - bun
+  - clangd
+  # === Infrastructure ===
   - terraform
+  - terragrunt
   - docker
-  # Remote & network
+  - podman
+  # === Kubernetes stack ===
+  - k8s
+  - helm
+  - k9s
+  - lfk
+  - kind
+  # === Desktop (Arch/CachyOS only; skipped elsewhere) ===
+  - plasma
+  - steam
+  # === Apps ===
+  - discord
+  - signal
+  - brave
+  - obsidian
+  - spotify
+  # === Remote & network ===
   - ssh
   - sshfs
-  # Misc dev tools
+  - tmate
+  # === Misc dev tools ===
   - taskfile
   - tldr
   - opencode
+  - herdr
+  - tern
+  - flatpak
+  - nala
+  - zsh
+  # === AI & local LLM ===
+  - ollama
+  - omp
+  # === Fun & info ===
+  - asciiquarium
+  - neofetch
+  - nerdfetch
+  - slides
+  # === macOS-only (skipped automatically on Linux) ===
+  - aldente
+  - raycast
+  - hammerspoon
+  - orbstack
+  - superwhisper
+  - borders
+
+  # === Available but off by default (uncomment to enable) ===
+  # - awesomewm   # installs a full desktop stack - Ubuntu task file only
+  # - alacritty
+  # - claude
+  # - codex
+  # - goreleaser
+  # - just
+  # - kwctl
+  # - nomad
+  # - pwsh
+  # - ruby
+  # - sesh
+  # - tshark
+  # - wireguard
+  # - aws
+  # - azure
 
 # --------------------------------------------------------------------
 # USER CONFIGURATION
@@ -103,6 +168,9 @@ op:
 # --------------------------------------------------------------------
 # LANGUAGE / TOOL CONFIG
 # --------------------------------------------------------------------
+
+# Obsidian vault repo (git URL). Leave empty to skip cloning.
+# obsidian_repo: "git@github.com:uarslandev/SecondBrain.git"
 
 go:
   packages:

@@ -1,0 +1,27 @@
+---
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Add Microsoft GPG key"
+  ansible.builtin.rpm_key:
+    key: https://packages.microsoft.com/keys/microsoft.asc
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Add Microsoft repository"
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/config/fedora/{{ ansible_facts['distribution_major_version'] }}/packages.microsoft.repo
+    dest: /etc/yum.repos.d/packages.microsoft.repo
+    mode: "0644"
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Install VS Code"
+  ansible.builtin.dnf:
+    name: code
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Package installation skipped: code"
+  when: not (can_install_packages | default(false))

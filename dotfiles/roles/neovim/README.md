@@ -62,7 +62,7 @@ The role symlinks `~/.config/nvim` to the role's `files/` directory:
     │   ├── copilot.lua       # GitHub Copilot
     │   ├── neo-tree.lua      # File explorer
     │   └── ...
-    └── user/                 # Core configuration
+    └── user/            # Core configuration
         └── core/
             ├── options.lua   # Editor settings
             ├── keymaps.lua   # Key bindings

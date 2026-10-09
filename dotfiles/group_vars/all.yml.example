@@ -23,13 +23,13 @@ arch_pacman_upgrade_extra_args: "--disable-download-timeout"
 # --------------------------------------------------------------------
 # Choose which tools to install. Include a role to install it, comment
 # out or remove to skip. Roles run in the listed order on every supported
-# distribution (Archlinux/CachyOS, Ubuntu, Fedora); each role only runs
-# the tasks that exist for the current distro. A role with no task file
-# for your distro is skipped silently.
+# distribution (Archlinux/CachyOS, Ubuntu, Fedora, macOS); each role only
+# runs the tasks that exist for the current distro. A role with no task
+# file for your distro is skipped silently.
 
 default_roles:
   # === Core (Recommended) ===
-  - system         # Essential system configuration (pacman upgrade, sudo, keyboard)
+  - system         # Essential system configuration (upgrades, sudo, keyboard, paru)
   - 1password      # 1Password CLI; installed early so secret-backed roles can read the vault
   - fonts          # Developer-friendly fonts (Nerd Fonts, optional vault font)
 
@@ -40,8 +40,10 @@ default_roles:
   - tmux           # Terminal multiplexer for session management
 
   # === Terminal Environment ===
-  - fzf            # Fuzzy finder for files and commands
+  - vscode         # Visual Studio Code
+  - kitty          # GPU-accelerated terminal
   - starship       # Beautiful shell prompt (used by the bash config)
+  - fzf            # Fuzzy finder for files and commands
 
   # === File Management ===
   - bat            # Better 'cat' with syntax highlighting
@@ -53,6 +55,8 @@ default_roles:
   # === Git Workflow ===
   - gh             # GitHub CLI for repo management
   - lazygit        # Terminal UI for git operations
+  - jj             # Jujutsu - modern version control (git-compatible)
+  - worktrunk      # Git worktree management
 
   # === Development Languages ===
   - python         # Python programming language
@@ -60,19 +64,83 @@ default_roles:
   - npm            # Node Package Manager
   - go             # Go programming language
   - rust           # Rust programming language
+  - lua            # Lua programming language
+  - bun            # Bun JavaScript runtime and toolkit
+  - clangd         # Native C/C++ language server (LSP)
 
   # === Infrastructure ===
   - terraform      # Infrastructure as Code
+  - terragrunt     # Terraform wrapper for DRY configurations
   - docker         # Container platform
+  - podman         # Alternative container platform
+
+  # === Kubernetes Ecosystem ===
+  - k8s            # Kubernetes command-line tools
+  - helm           # Kubernetes package manager
+  - k9s            # Kubernetes cluster management UI
+  - lfk            # Fast Kubernetes terminal UI alternative to k9s
+  - kind           # Kubernetes in Docker for local testing
+
+  # === Desktop (Arch/CachyOS only - skipped automatically elsewhere) ===
+  - plasma         # KDE Plasma Wayland desktop and KWin summon workflow
+  - steam          # Steam/Proton/Gamescope support for Arch/CachyOS
+
+  # === Apps ===
+  - discord        # Team communication
+  - signal         # Private messaging
+  - brave          # Privacy-focused web browser
+  - obsidian       # Knowledge management and note-taking
+  - spotify        # Music streaming
 
   # === Remote & Network ===
   - ssh            # SSH client config and 1Password key deployment
   - sshfs          # Mount remote filesystems via SSH
+  - tmate          # Terminal sharing for pair programming
 
   # === Misc Dev Tools ===
   - taskfile       # Modern task runner (alternative to make)
   - tldr           # Simplified command documentation
   - opencode       # OpenCode CLI and user-level config
+  - herdr          # Terminal workspace for parallel coding agents
+  - tern           # Multiplexing terminal (settings.json sync; app installed by hand)
+  - flatpak        # Universal Linux package manager
+  - nala           # Better apt frontend for Ubuntu/Debian
+  - zsh            # Zsh shell with oh-my-zsh (does not change your login shell)
+
+  # === AI & Local LLM ===
+  - ollama         # Run LLMs locally
+  - omp            # oh-my-posh prompt + oh-my-pi CLI
+
+  # === Fun & Info ===
+  - asciiquarium   # Animated ASCII aquarium for your terminal
+  - neofetch       # System information display
+  - nerdfetch      # Alternative system info with ASCII art
+  - slides         # Terminal-based presentation tool
+
+  # === macOS Specific (skipped automatically on Linux) ===
+  - aldente        # Battery charge limiter for macOS
+  - raycast        # macOS launcher and productivity tool
+  - hammerspoon    # macOS automation and window management
+  - orbstack       # Docker Desktop alternative for macOS
+  - superwhisper   # Voice dictation for macOS
+  - borders        # Window borders for macOS
+
+  # === Available but off by default (uncomment to enable) ===
+  # - awesomewm     # X11 window manager - installs a full desktop stack (Ubuntu task file only)
+  # - alacritty     # Cross-platform GPU-accelerated terminal
+  # - claude        # Claude Code CLI and user-level config
+  # - codex         # Codex CLI and user-level agent config
+  # - goreleaser    # Go application release automation
+  # - just          # Command runner (modern alternative to make)
+  # - kwctl         # Kubernetes policy engine management
+  # - nomad         # HashiCorp Nomad (alternative to Kubernetes)
+  # - pwsh          # PowerShell for cross-platform scripting
+  # - ruby          # Ruby programming language
+  # - sesh          # Tmux session manager
+  # - tshark        # Command-line network protocol analyzer
+  # - wireguard     # Modern VPN solution
+  # - aws           # Amazon Web Services CLI
+  # - azure         # Microsoft Azure CLI
 
 # --------------------------------------------------------------------
 # USER CONFIGURATION
@@ -136,6 +204,10 @@ git_user_name: "Your Full Name"
 # LANGUAGE-SPECIFIC CONFIGURATIONS
 # --------------------------------------------------------------------
 
+# === Obsidian ===
+# Git URL of your Obsidian vault. Leave empty to skip cloning.
+# obsidian_repo: "git@github.com:you/SecondBrain.git"
+
 # === Go Packages ===
 # Extra tools installed with `go install` (requires the go role)
 go:
@@ -146,10 +218,12 @@ go:
     - package: golang.org/x/tools/gopls@latest
       cmd: gopls
 
-# === Python Packages ===
-# Uncomment if you want extra pip packages
-# python:
-#   packages: []
+# === Helm Configuration ===
+# Uncomment if you want extra helm repos
+# helm:
+#   repos:
+#     - name: traefik
+#       url: https://helm.traefik.io/traefik
 
 # --------------------------------------------------------------------
 # TROUBLESHOOTING

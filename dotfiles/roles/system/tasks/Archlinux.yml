@@ -10,11 +10,19 @@
 - name: "System | {{ ansible_facts['distribution'] }} | Install"
   community.general.pacman:
     name:
+      - base-devel
+      - git
       - jq
       - open-iscsi
       - unzip
     state: present
   become: true
+  when: can_install_packages | default(false)
+
+- name: "System | {{ ansible_facts['distribution'] }} | Install paru (AUR helper)"
+  kewlfft.aur.aur:
+    name: paru
+    state: present
   when: can_install_packages | default(false)
 
 - name: "System | {{ ansible_facts['distribution'] }} | Enable Passwordless Sudo"
