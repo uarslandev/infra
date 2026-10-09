@@ -350,6 +350,10 @@ arch_setup() {
 }
 
 fedora_setup() {
+  if ! [ -x "$(command -v git)" ]; then
+    __task "Installing Git"
+    _cmd "sudo dnf install -y git"
+  fi
   if ! [ -x "$(command -v ansible)" ]; then
     __task "Installing Ansible (This may take a few minutes)"
     _cmd "sudo dnf install -y ansible"
