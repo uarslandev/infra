@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  author: TechDufus
+  author: dotfiles
   description: Generic GitHub Release downloader and installer
   license: MIT
   min_ansible_version: "2.9"

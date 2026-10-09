@@ -179,12 +179,12 @@ op:
   git:
     user:
       email: "op://Personal/GitHub/email"
-    allowed_signers: "op://Personal/TechDufus SSH/allowed_signers"
+    allowed_signers: "op://Personal/GitHub SSH/allowed_signers"
   ssh:
     github:
-      techdufus:
+      personal:
         - name: id_ed25519
-          vault_path: "op://Personal/TechDufus SSH"
+          vault_path: "op://Personal/GitHub SSH"
 ```
 
 **URL Format:** `op://vault_name/item_name/field_name`

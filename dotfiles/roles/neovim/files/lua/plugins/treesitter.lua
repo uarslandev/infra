@@ -216,7 +216,7 @@ return {
     prefer_non_plugin_parser("vim")
     prefer_non_plugin_parser("make")
 
-    local group = vim.api.nvim_create_augroup("techdufus_treesitter", { clear = true })
+    local group = vim.api.nvim_create_augroup("user_treesitter", { clear = true })
 
     vim.api.nvim_create_autocmd("FileType", {
       group = group,

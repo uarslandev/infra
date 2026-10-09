@@ -1,4 +1,4 @@
-require('techdufus')
+require('user')
 
 -- Automatically install lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"

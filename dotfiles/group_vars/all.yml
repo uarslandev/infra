@@ -1,149 +1,108 @@
+---
+# Arch/CachyOS pacman defaults. CachyOS mirrors can occasionally stall on large
+# packages; this keeps package installs from failing due to curl's low-speed timer.
 arch_pacman_extra_args: "--disable-download-timeout"
 arch_pacman_update_cache_extra_args: "--disable-download-timeout"
 arch_pacman_upgrade_extra_args: "--disable-download-timeout"
 
+# --------------------------------------------------------------------
+# ROLES
+# --------------------------------------------------------------------
+# Roles run in this order when you execute `dotfiles`.
+# Run a subset with: dotfiles -t git,neovim
+
 default_roles:
+  # Core
   - system
-  - 1password
-  - aldente
-  - asciiquarium
-  - awesomewm
-  - vicinae
-  - bash
-  - bat
-  - borders
-  - btop
-  - brave
-  - bun
-  - clangd
-  - herdr
-  - ollama
-  - omp
-  - cursor
-  # - docker
-  - flatpak
+  - 1password  # installed early so secret-backed roles can read the vault
   - fonts
-  - fzf
-  - gh
-  - discord
-  - ghostty
-  - plasma
-  - omarchy
   - git
-  - worktrunk
-  - go
-  - hammerspoon
-  - helm
-  - jj
-  - k8s
-  - k9s
-  - lfk
-  - kitty
-  - lazygit
-  - lsd
-  - lua
-  - nala
-  - ncdu
-  - neofetch
+  - bash
+  # Editors & terminal
   - neovim
-  - nerdfetch
+  - tmux
+  - fzf
+  - starship
+  # File tools
+  - bat
+  - lsd
+  - zoxide
+  - btop
+  - ncdu
+  # Git workflow
+  - gh
+  - lazygit
+  # Languages
+  - python
   - nvm  # Must run before npm
   - npm
-  - clawpatch
-  - obsidian
-  - opencode
-  - podman
-  # - pwsh
-  - python
-  - raycast
-  # - ruby
-  # - rust
-  - signal
-  - slides
-  - spotify
-  - superwhisper
+  - go
+  - rust
+  # Infrastructure
+  - terraform
+  - docker
+  # Remote & network
   - ssh
   - sshfs
-  - starship
+  # Misc dev tools
   - taskfile
-  - tern
-  - terraform
-  - terragrunt
   - tldr
-  - tmate
-  - zoxide
-  - zsh
+  - opencode
 
-# Desktop-session pruning (dotfiles_session from pre_tasks/detect_omarchy.yml).
-# Unlike exclude_roles_by_distribution, this also drops explicitly tagged roles.
-exclude_roles_by_session:
-  omarchy:
-    - plasma
-    - tldr
-    - neofetch
-  default:
-    - omarchy
+# --------------------------------------------------------------------
+# USER CONFIGURATION
+# --------------------------------------------------------------------
 
-exclude_roles_by_distribution:
-  Archlinux:
-    - asciiquarium
-    - bash
-    - aldente
-    - awesomewm
-    - borders
-    - hammerspoon
-    - ollama
-    - nala
-    - raycast
-    - slides
-    - superwhisper
-    - vicinae
-    - flatpak
-    - starship
+# REQUIRED: Your name for git commits and configurations
+git_user_name: "Umut Arslan"
 
-git_user_name: "TechDufus"
+# 1Password CLI account used by pre_tasks and secret-bearing roles.
+# op_account: my.1password.com
 
-op_account: my.1password.com
+# Optional keyboard layout for Linux system paths (localectl on Arch/Fedora).
+# keyboard:
+#   model: pc105
+#   layout: us
+#   options:
+#     - caps:none
 
-keyboard:
-  model: pc105
-  layout: us
-  variant: dvorak
-  options:
-    - caps:none
+# --------------------------------------------------------------------
+# 1PASSWORD INTEGRATION
+# --------------------------------------------------------------------
+# Secret references use the 1Password CLI format "op://VaultName/ItemName/Field".
+# Everything fails soft when 1Password is missing or locked: affected roles
+# skip secret sync and tell you how to retry. Never put plaintext secrets here.
 
 op:
   git:
     user:
       email: "op://Personal/GitHub/email"
-    allowed_signers: "op://Personal/TechDufus SSH/allowed_signers"
-  fonts:
-    berkeley_mono:
-      vault: "Private"
-      item: "BerkeleyMono Fonts"
-      files:
-        - field: BerkeleyMonoNerdFont-Regular
-          filename: BerkeleyMonoNerdFont-Regular.otf
-        - field: BerkeleyMonoNerdFont-Italic
-          filename: BerkeleyMonoNerdFont-Italic.otf
-        - field: BerkeleyMonoNerdFont-Bold
-          filename: BerkeleyMonoNerdFont-Bold.otf
-        - field: BerkeleyMonoNerdFont-BoldItalic
-          filename: BerkeleyMonoNerdFont-BoldItalic.otf
+    # SSH allowed signers for commit verification:
+    # <email> namespaces="git" <algo> <public key>
+    allowed_signers: "op://Personal/GitHub SSH/allowed_signers"
   ssh:
     github:
-      techdufus:
+      personal:
         - name: id_ed25519
-          vault_path: "op://Personal/TechDufus SSH"
+          vault_path: "op://Personal/GitHub SSH"
+  # Optional: paid font installed from your vault (see roles/fonts/README.md)
+  # fonts:
+  #   berkeley_mono:
+  #     vault: "Private"
+  #     item: "BerkeleyMono Fonts"
+  #     files:
+  #       - field: BerkeleyMonoNerdFont-Regular
+  #         filename: BerkeleyMonoNerdFont-Regular.otf
+  #       - field: BerkeleyMonoNerdFont-Italic
+  #         filename: BerkeleyMonoNerdFont-Italic.otf
+  #       - field: BerkeleyMonoNerdFont-Bold
+  #         filename: BerkeleyMonoNerdFont-Bold.otf
+  #       - field: BerkeleyMonoNerdFont-BoldItalic
+  #         filename: BerkeleyMonoNerdFont-BoldItalic.otf
 
-k8s:
-  repo:
-    version: "v1.34"
-
-helm:
-  repos:
-    - name: traefik
-      url: https://helm.traefik.io/traefik
+# --------------------------------------------------------------------
+# LANGUAGE / TOOL CONFIG
+# --------------------------------------------------------------------
 
 go:
   packages:
@@ -152,8 +111,3 @@ go:
     # LSP servers for OpenCode
     - package: golang.org/x/tools/gopls@latest
       cmd: gopls
-    - package: github.com/mrjosh/helm-ls@latest
-      cmd: helm-ls
-    # NOTE: termshark has dependency issues with v2.4.0
-    # - package: github.com/stillmatic/chat@latest
-    #   cmd: chat

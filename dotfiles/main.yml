@@ -1,5 +1,5 @@
 ---
-- name: DotFiles Config
+- name: Dev Environment Config
   hosts: localhost
   connection: local
 
@@ -15,17 +15,12 @@
       tags:
         - always
 
-    - name: Detect Desktop Session
-      ansible.builtin.import_tasks: pre_tasks/detect_omarchy.yml
-      tags:
-        - always
-
     - name: Detect WSL
       ansible.builtin.import_tasks: pre_tasks/detect_wsl.yml
       tags:
         - always
 
-    - name: Detect wsl
+    - name: Show WSL state
       ansible.builtin.debug:
         var: ansible_host_environment_is_wsl
       tags:
@@ -63,12 +58,11 @@
       ansible.builtin.set_fact:
         run_roles: >-
           {%- set distro_exclude_roles = (exclude_roles_by_distribution | default({})).get(ansible_facts['distribution'], []) -%}
-          {%- set session_exclude_roles = (exclude_roles_by_session | default({})).get(dotfiles_session | default('default'), []) -%}
-          {%- set default_excluded_roles = (exclude_roles | default([])) + distro_exclude_roles + session_exclude_roles -%}
+          {%- set default_excluded_roles = (exclude_roles | default([])) + distro_exclude_roles -%}
           {%- if ansible_run_tags | list == ['all'] -%}
           {{ default_roles | reject('in', default_excluded_roles) | list }}
           {%- else -%}
-          {{ ((default_roles | select('in', ansible_run_tags) | list) + (ansible_run_tags | reject('in', default_roles) | reject('equalto', 'all') | list)) | reject('in', session_exclude_roles) | list }}
+          {{ (default_roles | select('in', ansible_run_tags) | list) + (ansible_run_tags | reject('in', default_roles) | reject('equalto', 'all') | list) }}
           {%- endif -%}
       tags:
         - always

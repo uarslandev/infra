@@ -32,12 +32,12 @@ return {
     config = function()
       -- cmp icons
       local cmp = require('cmp')
-      local icons = require('techdufus.core.icons')
+      local icons = require('user.core.icons')
       -- local lspkind = require('lspkind')
       local luasnip = require('luasnip')
       local cmp_mapping = require('cmp.config.mapping')
       local cmp_types = require('cmp.types.cmp')
-      local utils = require('techdufus.core.utils')
+      local utils = require('user.core.utils')
 
       require('luasnip.loaders.from_vscode').lazy_load()
 
@@ -167,7 +167,7 @@ return {
     },
     config = function()
       local capabilities = require('cmp_nvim_lsp').default_capabilities()
-      local lsp_group = vim.api.nvim_create_augroup('techdufus_lsp', { clear = true })
+      local lsp_group = vim.api.nvim_create_augroup('user_lsp', { clear = true })
 
       local function telescope_lsp(method)
         return function()

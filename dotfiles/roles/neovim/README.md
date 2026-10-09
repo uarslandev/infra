@@ -62,7 +62,7 @@ The role symlinks `~/.config/nvim` to the role's `files/` directory:
     │   ├── copilot.lua       # GitHub Copilot
     │   ├── neo-tree.lua      # File explorer
     │   └── ...
-    └── techdufus/            # Core configuration
+    └── user/                 # Core configuration
         └── core/
             ├── options.lua   # Editor settings
             ├── keymaps.lua   # Key bindings
@@ -152,7 +152,7 @@ graph TD
 
 ## Configuration Modes
 
-The configuration supports two display modes via `ConfigMode` in `lua/techdufus/init.lua`:
+The configuration supports two display modes via `ConfigMode` in `lua/user/init.lua`:
 
 **Rich Mode (Default):**
 ```lua
@@ -298,7 +298,7 @@ ensure_installed = {
 ```
 
 ### Modify Keybindings
-Edit `files/lua/techdufus/core/keymaps.lua` for core mappings, or plugin-specific files for plugin keymaps.
+Edit `files/lua/user/core/keymaps.lua` for core mappings, or plugin-specific files for plugin keymaps.
 
 ### Change Color Scheme
 Edit `files/lua/plugins/color_scheme.lua` to configure Catppuccin or add a new theme.

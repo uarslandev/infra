@@ -4,3 +4,9 @@
   vars:
     berkeley_mono_install_dir: "{{ ansible_facts['user_dir'] }}/.local/share/fonts"
     berkeley_mono_refresh_cache: true
+  when: op.fonts.berkeley_mono is defined
+
+- name: "Fonts | Fedora | BerkeleyMono skipped (not configured)"
+  ansible.builtin.debug:
+    msg: "BerkeleyMono skipped: set op.fonts.berkeley_mono in group_vars/all.yml to install it from 1Password."
+  when: op.fonts.berkeley_mono is not defined

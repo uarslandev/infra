@@ -409,10 +409,6 @@ This role is used by several dotfiles roles including:
 
 MIT
 
-## 👤 Author
-
-TechDufus
-
 ---
 
 **Note**: This is a utility role and doesn't install anything by itself. It must be included by other roles that specify what to install.

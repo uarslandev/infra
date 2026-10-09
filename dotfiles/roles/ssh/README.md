@@ -94,9 +94,9 @@ SSH keys are configured in `group_vars/all.yml` under the `op.ssh` section:
 op:
   ssh:
     github:
-      techdufus:
+      personal:
         - name: id_ed25519                    # Key filename in ~/.ssh/
-          vault_path: "op://Personal/TechDufus SSH"
+          vault_path: "op://Personal/GitHub SSH"
 ```
 
 ### 1Password Vault Structure
@@ -226,7 +226,7 @@ ssh -T git@github.com -v
 dotfiles -t ssh -vvv
 
 # Check 1Password vault structure
-op item get "TechDufus SSH" --vault "Personal"
+op item get "GitHub SSH" --vault "Personal"
 
 # Verify vault path in group_vars/all.yml
 ```

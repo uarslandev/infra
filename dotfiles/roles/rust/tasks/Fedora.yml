@@ -1,0 +1,14 @@
+---
+- name: "Rust | {{ ansible_facts['distribution'] }} | Install packages"
+  ansible.builtin.dnf:
+    name:
+      - rust
+      - cargo
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Rust | {{ ansible_facts['distribution'] }} | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Package installation skipped: rust, cargo"
+  when: not (can_install_packages | default(false))

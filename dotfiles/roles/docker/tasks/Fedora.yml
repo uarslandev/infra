@@ -1,0 +1,43 @@
+---
+- name: "Docker | {{ ansible_facts['distribution'] }} | Add Docker's official repository"
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/fedora/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    mode: "0644"
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Docker | {{ ansible_facts['distribution'] }} | Install Docker packages"
+  ansible.builtin.dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Docker | {{ ansible_facts['distribution'] }} | Enable and start docker service"
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  become: true
+  when:
+    - can_install_packages | default(false)
+    - not ansible_host_environment_is_wsl
+
+- name: "Docker | {{ ansible_facts['distribution'] }} | Add user to docker group"
+  ansible.builtin.user:
+    append: true
+    groups: docker
+    name: "{{ ansible_facts['env']['USER'] }}"
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Docker | {{ ansible_facts['distribution'] }} | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Package installation skipped: docker-ce, docker-compose-plugin"
+  when: not (can_install_packages | default(false))

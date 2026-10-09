@@ -1,0 +1,22 @@
+---
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Add 1Password repository"
+  ansible.builtin.get_url:
+    url: https://downloads.1password.com/linux/rpm/stable/1password.repo
+    dest: /etc/yum.repos.d/1password.repo
+    mode: "0644"
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Install 1Password packages"
+  ansible.builtin.dnf:
+    name:
+      - 1password
+      - 1password-cli
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Package installation skipped: 1password, 1password-cli"
+  when: not (can_install_packages | default(false))

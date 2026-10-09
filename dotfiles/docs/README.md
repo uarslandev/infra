@@ -55,33 +55,18 @@ dotfiles -t your-role -vvv
 
 ## Troubleshooting
 
-### Completions Not Working in tmux
+### Completions Not Working
 
-If tab completions work in your terminal but not in tmux, the issue is likely `zinit cdreplay` overwriting custom completions. The solution is to load custom completions AFTER zinit's replay:
+If tab completions work in your terminal but not inside tmux, the issue is
+usually a shell completion framework overwriting custom completions. Load
+custom completions after your framework's own completions:
 
-```zsh
-# In .zshrc:
-autoload -Uz compinit && compinit
-zinit cdreplay -q  # Let zinit replay its completions first
-
-# Then load custom completions
-for completion_file in $HOME/.config/zsh/*_completions.zsh; do
+```bash
+# In .bashrc - source custom completions last
+for completion_file in $HOME/.config/bash/*_completions.sh; do
   source "$completion_file"
 done
 ```
-
-### Alternative: Using zinit for Custom Completions
-
-Instead of manually sourcing completion files, you can let zinit manage them:
-
-```zsh
-# Load local completion files as snippets
-zinit wait lucid for \
-  id-as"dotfiles-completion" \
-  multisrc"$HOME/.config/zsh/*_completions.zsh"
-```
-
-This approach leverages zinit's built-in completion management and turbo mode for better performance.
 
 ## Uninstalling Roles
 

@@ -26,7 +26,7 @@ Link two existing GitHub issues in a parent/child relationship.
 /gh-link 10 25 --force
 
 # Link issues across repositories
-/gh-link TechDufus/dotfiles#42 27
+/gh-link owner/repo#42 27
 /gh-link 19 org/other-repo#55
 /gh-link org/repo1#100 org/repo2#200 --force
 ```

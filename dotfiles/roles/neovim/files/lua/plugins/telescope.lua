@@ -1,4 +1,4 @@
-local techdufus = require_on_exported_call('techdufus.telescope.pickers')
+local user = require_on_exported_call('user.telescope.pickers')
 
 return {
   "nvim-telescope/telescope.nvim",
@@ -28,7 +28,7 @@ return {
     },
     { "<leader>sh", function() require('telescope.builtin').help_tags() end,   { desc = '[S]earch [H]elp', silent = true, noremap = true } },
     { "<leader>ss", function() require('telescope.builtin').builtin() end,     { desc = '[S]earch [S]elect Telescope', silent = true, noremap = true } },
-    { "<leader>fs", techdufus.project_files,                                   { desc = '[F]ile [S]earch', silent = true, noremap = true } },
+    { "<leader>fs", user.project_files,                                   { desc = '[F]ile [S]earch', silent = true, noremap = true } },
     { "<leader>b",  function() require('telescope.builtin').buffers() end,     { desc = '[B]uffers', silent = true, noremap = true } },
     { "<leader>gs", function() require('telescope.builtin').live_grep() end,   { desc = '[G]rep [S]earch', silent = true, noremap = true } },
     { "<leader>fr", function() require('telescope.builtin').oldfiles() end,    { desc = '[F]iles [R]ecent', silent = true, noremap = true } },

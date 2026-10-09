@@ -102,19 +102,19 @@ op vault list
 **Solution**:
 1. Check your vault names: `op vault list`
 2. Check your item names: `op item list --vault "Personal"`
-3. Update your `~/.dotfiles/group_vars/all.yml` with correct paths
+3. Update your `group_vars/all.yml` with correct paths
 
 ## 🐧 OS-Specific Issues
 
-### macOS: "zsh: command not found: dotfiles"
+### "dotfiles: command not found"
 
 **Problem**: The `dotfiles` command isn't in your PATH.
 
 **Solution**:
 ```bash
 # Add to your shell profile
-echo 'export PATH="$HOME/.dotfiles/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
+echo 'export PATH="<repo>/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 ### Ubuntu: Package conflicts
@@ -131,7 +131,7 @@ sudo apt autoremove
 sudo apt --fix-broken install
 
 # Re-run dotfiles
-cd ~/.dotfiles && ./bin/dotfiles
+./bin/dotfiles
 ```
 
 ### Arch: Keyring issues
@@ -161,7 +161,7 @@ getenforce
 sudo setenforce 0
 
 # If dotfiles work, update SELinux contexts
-sudo restorecon -Rv ~/.dotfiles
+sudo restorecon -Rv <repo>
 
 # Re-enable SELinux
 sudo setenforce 1
@@ -193,7 +193,6 @@ dotfiles --check
 **Solution**:
 ```bash
 # Update Ansible Galaxy collection requirements
-cd ~/.dotfiles
 ansible-galaxy collection install -r requirements/common.yml --force
 ansible-galaxy collection install -r requirements/arch.yml --force  # Arch/CachyOS AUR roles
 ```
@@ -210,7 +209,7 @@ ansible-galaxy collection install -r requirements/arch.yml --force  # Arch/Cachy
 
 **Solutions**:
 - Run during off-peak hours
-- Install specific roles only: `dotfiles -t git,zsh`
+- Install specific roles only: `dotfiles -t git,tmux`
 - Check network connection
 
 ### Out of disk space
@@ -273,17 +272,12 @@ df -h
 
 ### Create a Bug Report
 
-If you're still stuck, [create an issue](https://github.com/TechDufus/dotfiles/issues/new) with:
+If you're still stuck, open an issue in your dotfiles fork's tracker with:
 
 1. **Operating System**: `uname -a` output
 2. **Error message**: Copy the exact error
 3. **Steps to reproduce**: What did you do?
 4. **Debug log**: Output from `dotfiles -vvv`
-
-### Community Support
-
-- 💬 **Discord**: [Join our community](https://discord.gg/5M4hjfyRBj)
-- 🐛 **Issues**: [Report bugs](https://github.com/TechDufus/dotfiles/issues)
 
 ## 🔄 Recovery Options
 
@@ -293,17 +287,14 @@ If something is completely broken:
 
 ```bash
 # Backup your config
-cp ~/.dotfiles/group_vars/all.yml ~/all.yml.backup
+cp group_vars/all.yml ~/all.yml.backup
 
-# Remove dotfiles directory
-rm -rf ~/.dotfiles
-
-# Re-run installation
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/TechDufus/dotfiles/main/bin/dotfiles)"
+# Remove the cloned repo and re-clone, or re-run from your existing copy
+./bin/dotfiles
 
 # Restore your config
-cp ~/all.yml.backup ~/.dotfiles/group_vars/all.yml
-dotfiles
+cp ~/all.yml.backup group_vars/all.yml
+./bin/dotfiles
 ```
 
 ### Disable Problematic Roles
@@ -312,15 +303,11 @@ If a specific role is causing issues:
 
 ```bash
 # Edit your config
-nvim ~/.dotfiles/group_vars/all.yml
+nvim group_vars/all.yml
 
 # Comment out the problematic role
 # - role: problematic-role  # disabled for now
 
 # Re-run
-dotfiles
+./bin/dotfiles
 ```
-
----
-
-**Still having issues?** Don't hesitate to [ask for help](https://github.com/TechDufus/dotfiles/issues/new) - we're here to help!

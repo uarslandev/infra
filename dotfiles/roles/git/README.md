@@ -69,7 +69,7 @@ op:
   git:
     user:
       email: "op://Personal/GitHub/email"
-    allowed_signers: "op://Personal/TechDufus SSH/allowed_signers"
+    allowed_signers: "op://Personal/GitHub SSH/allowed_signers"
 ```
 
 The role gracefully handles cases where 1Password isn't authenticated, providing clear instructions without breaking the playbook.
@@ -366,4 +366,4 @@ Works seamlessly with companion shell roles (zsh/bash) that provide:
 
 ---
 
-Part of the [dotfiles](https://github.com/TechDufus/dotfiles) collection - Automated cross-platform development environment setup.
+Part of the dotfiles collection - Automated cross-platform development environment setup.

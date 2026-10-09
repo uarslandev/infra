@@ -111,7 +111,17 @@ VAULT_SECRET_FILE="$HOME/.ansible-vault/vault.secret"
 OP_INSTALLED=false
 OP_AUTHENTICATED=false
 DOTFILES_LOG="$HOME/.dotfiles.log"
-DOTFILES_DIR="$HOME/.dotfiles"
+# Repo location: when this script lives inside the repo (<repo>/bin/dotfiles),
+# use the repo root; otherwise (e.g. piped from curl) fall back to ~/.dotfiles.
+# Override with the DOTFILES_DIR env var.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}" 2>/dev/null)" 2>/dev/null && pwd)"
+if [[ -n "$SCRIPT_DIR" && -f "$SCRIPT_DIR/dotfiles" && -f "$SCRIPT_DIR/../main.yml" ]]; then
+  DOTFILES_DIR="${DOTFILES_DIR:-$(dirname "$SCRIPT_DIR")}"
+else
+  DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
+fi
+# Remote used when the repo is not cloned yet. Override with DOTFILES_REPO_URL.
+DOTFILES_REPO_URL="${DOTFILES_REPO_URL:-https://github.com/uarslandev/dotfiles.git}"
 IS_FIRST_RUN="$HOME/.dotfiles_run"
 DOTFILES_VERSION="1.0.0"
 # Spinner PID tracking
@@ -119,7 +129,7 @@ SPINNER_PID=""
 
 # Show usage/help information
 show_help() {
-  echo -e "${CAT_SAPPHIRE}TechDufus Dotfiles${NC} - Ansible-based dotfiles management"
+  echo -e "${CAT_SAPPHIRE}dotfiles${NC} - Ansible-based dotfiles management"
   echo ""
   echo -e "${CAT_BLUE}USAGE:${NC}"
   echo "    dotfiles [OPTIONS] [-- ANSIBLE_ARGS]"
@@ -151,8 +161,6 @@ show_help() {
   echo -e "${CAT_BLUE}ANSIBLE ARGUMENTS:${NC}"
   echo "    All arguments not recognized by dotfiles are passed to ansible-playbook."
   echo "    Common options: -t <tags>, --check, -vvv, --list-tags"
-  echo ""
-  echo -e "${CAT_SUBTEXT0}For more information: https://github.com/TechDufus/dotfiles${NC}"
 }
 
 # Show version information
@@ -161,7 +169,7 @@ show_version() {
   if [[ -d "$DOTFILES_DIR/.git" ]]; then
     git_hash=$(git -C "$DOTFILES_DIR" rev-parse --short HEAD 2>/dev/null || echo "unknown")
   fi
-  echo -e "${CAT_SAPPHIRE}TechDufus Dotfiles${NC} version ${CAT_GREEN}${DOTFILES_VERSION}${NC} (${CAT_SUBTEXT1}${git_hash}${NC})"
+  echo -e "${CAT_SAPPHIRE}dotfiles${NC} version ${CAT_GREEN}${DOTFILES_VERSION}${NC} (${CAT_SUBTEXT1}${git_hash}${NC})"
 }
 
 # Spinner function that runs in background
@@ -283,6 +291,11 @@ ubuntu_setup() {
   if ! dpkg -s python3 >/dev/null 2>&1; then
     __task "Installing Python3"
     _cmd "sudo apt-get install -y python3"
+  fi
+
+  if ! command -v git >/dev/null 2>&1; then
+    __task "Installing Git"
+    _cmd "sudo apt-get install -y git"
   fi
 
   local UBUNTU_MAJOR_VERSION=$(echo "$VERSION_ID" | cut -d. -f1)
@@ -452,13 +465,6 @@ detect_os() {
 
 print_banner() {
   echo ""
-  echo -e "${CAT_SAPPHIRE}  ████████╗███████╗ ██████╗██╗  ██╗██████╗ ██╗   ██╗███████╗██╗   ██╗███████╗${NC}"
-  echo -e "${CAT_SAPPHIRE}  ╚══██╔══╝██╔════╝██╔════╝██║  ██║██╔══██╗██║   ██║██╔════╝██║   ██║██╔════╝${NC}"
-  echo -e "${CAT_SAPPHIRE}     ██║   █████╗  ██║     ███████║██║  ██║██║   ██║█████╗  ██║   ██║███████╗${NC}"
-  echo -e "${CAT_SAPPHIRE}     ██║   ██╔══╝  ██║     ██╔══██║██║  ██║██║   ██║██╔══╝  ██║   ██║╚════██║${NC}"
-  echo -e "${CAT_SAPPHIRE}     ██║   ███████╗╚██████╗██║  ██║██████╔╝╚██████╔╝██║     ╚██████╔╝███████║${NC}"
-  echo -e "${CAT_SAPPHIRE}     ╚═╝   ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝      ╚═════╝ ╚══════╝${NC}"
-  echo ""
   echo -e "${CAT_BLUE}      ██████╗  ██████╗ ████████╗███████╗██╗██╗     ███████╗███████╗${NC}"
   echo -e "${CAT_BLUE}      ██╔══██╗██╔═══██╗╚══██╔══╝██╔════╝██║██║     ██╔════╝██╔════╝${NC}"
   echo -e "${CAT_BLUE}      ██║  ██║██║   ██║   ██║   █████╗  ██║██║     █████╗  ███████╗${NC}"
@@ -508,13 +514,21 @@ case $dotfiles_os in
 esac
 
 if ! [[ -d "$DOTFILES_DIR" ]]; then
+  if [[ -z "$DOTFILES_REPO_URL" ]]; then
+    printf "${CAT_RED} [✗]  ${CAT_TEXT}Dotfiles repo not found at %s${NC}\n" "$DOTFILES_DIR"
+    printf " ${WARNING}${CAT_MAROON}   Clone your repo to that path, or set DOTFILES_REPO_URL in bin/dotfiles.${NC}\n"
+    exit 1
+  fi
   __task "Downloading dotfiles repository (This may take a minute)"
-  _cmd "git clone --quiet https://github.com/TechDufus/dotfiles.git $DOTFILES_DIR"
+  _cmd "git clone --quiet $DOTFILES_REPO_URL $DOTFILES_DIR"
   _task_done
 else
-  __task "Updating dotfiles repository"
-  _cmd "git -C $DOTFILES_DIR pull --quiet"
-  _task_done
+  # Pull only when the repo has a configured remote (local-only clones are fine)
+  if git -C "$DOTFILES_DIR" remote get-url origin &> /dev/null; then
+    __task "Updating dotfiles repository"
+    _cmd "git -C $DOTFILES_DIR pull --quiet"
+    _task_done
+  fi
 fi
 
 pushd "$DOTFILES_DIR" 2>&1 > /dev/null
@@ -686,9 +700,8 @@ if ! [[ -f "$IS_FIRST_RUN" ]]; then
   echo -e "${CHECK_MARK} ${CAT_GREEN}🎉 Dotfiles installation complete!${NC}"
   echo ""
   echo -e "${ARROW} ${CAT_TEAL}Next steps:${NC}"
-  echo -e "   1. Customize your setup: ${CAT_LAVENDER}nvim ~/.dotfiles/group_vars/all.yml${NC}"
+  echo -e "   1. Customize your setup: ${CAT_LAVENDER}nvim $DOTFILES_DIR/group_vars/all.yml${NC}"
   echo -e "   2. Apply changes anytime: ${CAT_LAVENDER}dotfiles${NC}"
-  echo -e "   3. Get help: ${CAT_LAVENDER}https://discord.gg/5M4hjfyRBj${NC}"
   echo ""
   echo -e "${ARROW} ${CAT_TEAL}Please reboot your computer to complete the setup.${NC}"
   echo ""

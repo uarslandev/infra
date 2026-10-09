@@ -1,0 +1,5 @@
+---
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Install Python"
+  community.general.homebrew:
+    name: python3
+    state: present

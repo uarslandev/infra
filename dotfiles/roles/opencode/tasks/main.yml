@@ -80,12 +80,11 @@
 - name: "{{ role_name }} | Warn if OpenCode is unavailable"
   ansible.builtin.debug:
     msg: >-
-      WARNING: OpenCode is not installed. On macOS install via Homebrew tap sst/tap,
-      on Ubuntu via npm, or install bun and rerun this role.
+      WARNING: OpenCode is not installed. Install it via npm, the official
+      install script, or install bun and rerun this role.
   when:
     - opencode_effective_bin | length == 0
     - (opencode_bun_bin | default('')) | length == 0
 
 - name: "{{ role_name }} | Configure OpenCode"
   ansible.builtin.include_tasks: config.yml
-  when: not (dotfiles_is_omarchy | default(false) | bool)

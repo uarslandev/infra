@@ -137,4 +137,4 @@ When extending this role:
 
 ---
 
-**Part of**: [TechDufus's dotfiles](https://github.com/TechDufus/.dotfiles) - Ansible-based cross-platform development environment
+**Part of**: the dotfiles collection - Ansible-based cross-platform development environment

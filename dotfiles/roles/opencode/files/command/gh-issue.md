@@ -37,7 +37,7 @@ The command detects if the first argument is a parent issue reference:
 /gh-issue 23 "Add unit tests" medium "testing"
 
 # Parent in different repository
-/gh-issue TechDufus/dotfiles#42 "Implement related feature"
+/gh-issue owner/repo#42 "Implement related feature"
 /gh-issue org/main-repo#100 "Add integration tests" high "testing"
 ```
 

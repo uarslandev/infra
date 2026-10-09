@@ -75,7 +75,7 @@ graph TD
 | `~/.bashrc` | Main Bash configuration, sources Oh My Bash and custom scripts |
 | `~/.profile` | Login shell profile |
 | `~/.config/bash/*.sh` | Custom aliases, functions, completions (25+ files) |
-| `~/.config/bash/.bash_private` | Private environment variables from 1Password |
+| `~/.config/bash/vars.secret` | On-demand 1Password secret exports (loaded with `secret`) |
 | `~/.oh-my-bash/` | Oh My Bash installation directory |
 | `~/.oh-my-bash/custom/themes/axin/` | Custom Axin theme |
 
@@ -127,11 +127,15 @@ Each supported platform receives custom utility functions:
 
 ### 🔐 Secret Management
 
-Integrates with **1Password** to securely inject environment variables:
+Integrates with **1Password** via two patterns:
 
 ```bash
-# Variables from 1Password are exported in ~/.config/bash/.bash_private
-# Automatically sourced in .bashrc
+# On-demand: run `secret` to source ~/.config/bash/vars.secret (your op:// exports),
+# `secret -c` to unload them from the environment
+secret
+
+# SSH agent: .profile exports SSH_AUTH_SOCK to the 1Password agent socket
+# when it is available (Linux and macOS paths)
 ```
 
 ### 🎨 Visual Enhancements
@@ -163,7 +167,7 @@ Automatically detects and integrates with:
 - `starship` - For the Starship prompt (highly recommended)
 - `neovim` - For the `nisshfs` remote editing function
 - `fzf` - For interactive Kubernetes context switching
-- `1password` - For secret management via `.bash_private`
+- `1password` - For the `secret` on-demand loader and SSH agent socket
 
 ## Installation
 
@@ -283,13 +287,11 @@ sequenceDiagram
     participant bashrc as ~/.bashrc
     participant OMB as Oh My Bash
     participant Custom as ~/.config/bash/*.sh
-    participant Private as .bash_private
     participant Starship
 
     User->>bashrc: Launch bash shell
     bashrc->>OMB: Source oh-my-bash.sh
     OMB->>OMB: Load plugins, completions, aliases
-    bashrc->>Private: Source .bash_private (1Password secrets)
     bashrc->>Custom: Source all custom scripts
     Note over Custom: Load functions, aliases,<br/>completions, variables
     bashrc->>Starship: Initialize starship prompt

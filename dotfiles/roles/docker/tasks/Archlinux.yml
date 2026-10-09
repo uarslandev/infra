@@ -1,0 +1,33 @@
+---
+- name: "Docker | {{ ansible_facts['distribution'] }} | Install Docker packages"
+  community.general.pacman:
+    name:
+      - docker
+      - docker-compose
+      - docker-buildx
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Docker | {{ ansible_facts['distribution'] }} | Enable and start docker service"
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  become: true
+  when:
+    - can_install_packages | default(false)
+    - not ansible_host_environment_is_wsl
+
+- name: "Docker | {{ ansible_facts['distribution'] }} | Add user to docker group"
+  ansible.builtin.user:
+    append: true
+    groups: docker
+    name: "{{ ansible_facts['env']['USER'] }}"
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Docker | {{ ansible_facts['distribution'] }} | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Package installation skipped: docker, docker-compose, docker-buildx"
+  when: not (can_install_packages | default(false))
