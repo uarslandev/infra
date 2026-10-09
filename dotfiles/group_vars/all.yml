@@ -169,6 +169,11 @@ op:
 # LANGUAGE / TOOL CONFIG
 # --------------------------------------------------------------------
 
+# Kubernetes repo version (k8s role)
+k8s:
+  repo:
+    version: "v1.34"
+
 # Obsidian vault repo (git URL). Leave empty to skip cloning.
 # obsidian_repo: "git@github.com:uarslandev/SecondBrain.git"
 

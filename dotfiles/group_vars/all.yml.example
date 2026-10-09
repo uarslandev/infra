@@ -204,6 +204,12 @@ git_user_name: "Your Full Name"
 # LANGUAGE-SPECIFIC CONFIGURATIONS
 # --------------------------------------------------------------------
 
+# === Kubernetes Configuration ===
+# Kubernetes repo version (k8s role)
+# k8s:
+#   repo:
+#     version: "v1.34"
+
 # === Obsidian ===
 # Git URL of your Obsidian vault. Leave empty to skip cloning.
 # obsidian_repo: "git@github.com:you/SecondBrain.git"
