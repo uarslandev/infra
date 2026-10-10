@@ -1,11 +1,5 @@
 ---
-- name: Cleanup Tldr downloaded tar
-  ansible.builtin.file:
-    path: "/tmp/{{ tldr_file }}.tar.gz"
-    state: absent
-  become: true
-
-- name: Remove extracted Tldr directory
+- name: Cleanup Tldr downloaded binary
   ansible.builtin.file:
     path: /tmp/tldr
     state: absent
