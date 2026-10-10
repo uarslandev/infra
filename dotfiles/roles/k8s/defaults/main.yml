@@ -1,0 +1,4 @@
+---
+k8s:
+  repo:
+    version: "v1.34"
