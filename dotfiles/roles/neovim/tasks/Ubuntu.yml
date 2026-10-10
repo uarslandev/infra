@@ -51,6 +51,7 @@
       ansible.builtin.uri:
         url: https://api.github.com/repos/tree-sitter/tree-sitter/releases/latest
         return_content: yes
+      check_mode: false
       register: tree_sitter_cli_release
       no_log: true
 
@@ -179,6 +180,7 @@
       ansible.builtin.uri:
         url: https://api.github.com/repos/neovim/neovim/releases/latest
         return_content: yes
+      check_mode: false
       register: nvim_latest_release
       no_log: true
 
@@ -217,6 +219,7 @@
           ansible.builtin.uri:
             url: https://api.github.com/repos/BurntSushi/ripgrep/releases/latest
             return_content: yes
+          check_mode: false
           register: rg_latest_release
           no_log: true
 

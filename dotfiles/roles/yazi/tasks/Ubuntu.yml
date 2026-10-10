@@ -24,6 +24,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/sxyazi/yazi/releases/latest
     return_content: true
+  check_mode: false
   register: yazi_release
   when: yazi_check.rc != 0
 

@@ -3,6 +3,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/derailed/k9s/releases/latest
   register: k9s_latest_version_json
+  check_mode: false
   changed_when: false
 
 - name: "K9s | Registering k9s Latest Release"

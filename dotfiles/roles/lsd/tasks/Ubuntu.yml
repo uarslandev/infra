@@ -3,6 +3,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/lsd-rs/lsd/releases/latest
   register: lsd_latest_version_json
+  check_mode: false
   changed_when: false
 
 - name: "LSD | Registering LSD Latest Release"

@@ -7,6 +7,7 @@
     headers:
       Accept: application/vnd.github.v3+json
   register: nvm_latest_version_json
+  check_mode: false
   changed_when: false
 
 - name: "NVM | Update | Get current nvm version"

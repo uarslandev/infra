@@ -3,6 +3,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/jesseduffield/lazygit/releases/latest
   register: lazygit_latest_version_json
+  check_mode: false
   changed_when: false
 
 - name: "LAZYGIT | Registering lazygit Latest Release"

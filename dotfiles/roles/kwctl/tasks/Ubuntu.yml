@@ -3,6 +3,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/repos/kubewarden/kwctl/releases/latest
   register: kwctl_latest_version_json
+  check_mode: false
   changed_when: false
 
 - name: "Kubewarden | Registering kwctl Latest Release"
