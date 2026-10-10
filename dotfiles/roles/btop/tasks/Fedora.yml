@@ -1,13 +1,24 @@
 ---
+- name: "BTOP | Ensure user-local bin directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+  when: not (can_install_packages | default(false))
+
 - name: "BTOP | Install from GitHub Release"
   ansible.builtin.include_role:
     name: github_release
+  when:
+    - ansible_facts['machine'] != 'aarch64'
   vars:
     github_release_repo: "aristocratos/btop"
     github_release_binary_name: "btop"
     github_release_asset_name_pattern: "btop-x86_64-linux-musl.tbz"
     github_release_asset_type: "tar.bz2"
     github_release_extract_subpath: "btop/bin/btop"
+    github_release_install_path: "{{ (ansible_facts['user_dir'] + '/.local/bin') if not (can_install_packages | default(false)) else '/usr/local/bin' }}"
+    github_release_become: "{{ can_install_packages | default(false) }}"
 
 - name: "BTOP | Remove old bpytop if installed"
   ansible.builtin.dnf:

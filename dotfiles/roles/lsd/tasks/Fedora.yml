@@ -19,6 +19,13 @@
   register: lsd_system_install
   failed_when: false
 
+- name: "LSD | {{ ansible_facts['distribution'] }} | Ensure user-local bin directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+  when: not (can_install_packages | default(false))
+
 # Fallback to GitHub release if system package fails or no sudo
 - name: "LSD | {{ ansible_facts['distribution'] }} | Install from GitHub Release"
   when: 
@@ -32,9 +39,8 @@
     github_release_asset_name_pattern: "lsd-.*-{{ ansible_facts['architecture'] | replace('x86_64', 'x86_64') | replace('aarch64', 'aarch64') }}-unknown-linux-gnu.tar.gz"
     github_release_check_command: "lsd --version"
     github_release_version_pattern: 'lsd ([0-9]+\.[0-9]+\.[0-9]+)'
-    github_release_install_dir: "{{ '~/.local/bin' if not (can_install_packages | default(false)) else '/usr/local/bin' }}"
-    github_release_binary_mode: "0755"
-    github_release_requires_sudo: "{{ can_install_packages | default(false) }}"
+    github_release_install_path: "{{ (ansible_facts['user_dir'] + '/.local/bin') if not (can_install_packages | default(false)) else '/usr/local/bin' }}"
+    github_release_become: "{{ can_install_packages | default(false) }}"
 
 - name: "LSD | {{ ansible_facts['distribution'] }} | Report installation status"
   ansible.builtin.debug:
