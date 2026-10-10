@@ -81,4 +81,6 @@
       notify:
         - Remove extracted jj directory
 
-  when: jj_latest_release not in current_jj_version.stdout|default('')
+  when:
+    - can_install_packages | default(false)
+    - jj_latest_release not in current_jj_version.stdout|default('')

@@ -31,7 +31,9 @@
     var: kwctl_latest_release
 
 - name: "Kubewarden | Install"
-  when: kwctl_latest_release not in current_kwctl_version.stdout|default('')
+  when:
+    - can_install_packages | default(false)
+    - kwctl_latest_release not in current_kwctl_version.stdout|default('')
   block:
     # regex_replace('^.', '') removes the first character from the string (the 'v' in the version number)
     - name: "Kubewarden | Define kwctl_file"

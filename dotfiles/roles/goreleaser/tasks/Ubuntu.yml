@@ -1,5 +1,6 @@
 ---
 - name: "Goreleaser | Add Apt Repository"
+  when: can_install_packages | default(false)
   ansible.builtin.apt_repository:
     repo: "deb [trusted=yes] https://repo.goreleaser.com/apt/ /"
     filename: "goreleaser"
@@ -9,6 +10,7 @@
   become: true
 
 - name: "Goreleaser | Install Goreleaser"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: goreleaser
     state: present

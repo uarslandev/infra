@@ -1,5 +1,6 @@
 ---
 - name: "Tmux | {{ ansible_facts['distribution'] }} | Install tmux"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: tmux
     state: present

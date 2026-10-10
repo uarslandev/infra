@@ -1,5 +1,6 @@
 ---
 - name: "{{ role_name }} | Ubuntu | Install Vicinae prerequisites"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: "{{ vicinae_ubuntu_packages + [vicinae_appimage_fuse_package] + ((vicinae_install_qalc | bool) | ternary(['qalc'], [])) }}"
     state: present
@@ -144,6 +145,7 @@
 
 - name: "{{ role_name }} | Ubuntu | Install Vicinae from extracted AppImage"
   when:
+    - can_install_packages | default(false)
     - not ansible_check_mode
     - vicinae_needs_install | bool
   block:
@@ -443,6 +445,7 @@
     recurse: true
   become: true
   when:
+    - can_install_packages | default(false)
     - not ansible_check_mode
     - vicinae_managed_install_dir.stat.isdir | default(false)
 
@@ -476,6 +479,7 @@
   changed_when: true
   become: true
   when:
+    - can_install_packages | default(false)
     - not ansible_check_mode
     - vicinae_install_input_server | bool
     - vicinae_installed_input_server.stat.exists | default(false)

@@ -1,5 +1,6 @@
 ---
 - name: "awesomewm | Ubuntu | Install AwesomeWM and dependencies"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name:
       - awesome
@@ -52,6 +53,7 @@
     state: absent
   become: true
   when:
+    - can_install_packages | default(false)
     - awesomewm_remove_legacy_launcher_tools | bool
     - awesomewm_legacy_launcher_packages | length > 0
 
@@ -63,6 +65,7 @@
   when: awesomewm_remove_legacy_launcher_tools | bool
 
 - name: "awesomewm | Ubuntu | Add user to video group for backlight control"
+  when: can_install_packages | default(false)
   ansible.builtin.user:
     name: "{{ ansible_facts['user_id'] }}"
     groups: video
@@ -70,6 +73,7 @@
   become: true
 
 - name: "awesomewm | Ubuntu | Install upower for battery time estimation"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: upower
     state: present
@@ -177,6 +181,7 @@
     mode: "0644"
 
 - name: "awesomewm | Ubuntu | Install GTK theme prerequisites"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name:
       - sassc

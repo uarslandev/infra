@@ -33,7 +33,9 @@
     var: lsd_latest_release
 
 - name: "LSD | Install"
-  when: lsd_latest_release | regex_replace('^.', '') not in current_lsd_version|default('')
+  when:
+    - can_install_packages | default(false)
+    - lsd_latest_release | regex_replace('^.', '') not in current_lsd_version|default('')
   block:
     - name: "Go-Lang | Define GOARCH"
       ansible.builtin.set_fact:

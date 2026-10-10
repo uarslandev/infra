@@ -1,11 +1,13 @@
 ---
 - name: "Flatpak | Install flatpak"
+  when: can_install_packages | default(false)
   ansible.builtin.package:
     name: flatpak
     state: present
   become: true
 
 - name: "Flatpak | Add Flathub remote"
+  when: can_install_packages | default(false)
   community.general.flatpak_remote:
     name: "flathub"
     flatpakrepo_url: "https://flathub.org/repo/flathub.flatpakrepo"
@@ -34,5 +36,7 @@
     - com.spotify.Client
     - md.obsidian.Obsidian
     - com.valvesoftware.Steam
-  when: flatpak_is_desktop
+  when:
+    - can_install_packages | default(false)
+    - flatpak_is_desktop
   become: true

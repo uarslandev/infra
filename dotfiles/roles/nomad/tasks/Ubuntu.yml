@@ -1,5 +1,6 @@
 ---
 - name: Nomad | {{ ansible_facts['distribution'] }} | Add the HashiCorp GPG key.
+  when: can_install_packages | default(false)
   ansible.builtin.apt_key:
     url: https://apt.releases.hashicorp.com/gpg
     keyring: /usr/share/keyrings/hashicorp-archive-keyring.gpg
@@ -7,12 +8,14 @@
   become: true
 
 - name: Nomad | {{ ansible_facts['distribution'] }} | Add the official HashiCorp Linux repository
+  when: can_install_packages | default(false)
   ansible.builtin.apt_repository:
     repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com {{ ansible_facts['distribution_release'] }} main"
     state: present
   become: true
 
 - name: Nomad | {{ ansible_facts['distribution'] }} | Install Nomad
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: nomad
     state: present

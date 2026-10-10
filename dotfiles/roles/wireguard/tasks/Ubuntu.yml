@@ -1,5 +1,6 @@
 ---
 - name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Install Wireguard"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: "{{ item }}"
     state: present

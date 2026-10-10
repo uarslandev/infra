@@ -2,6 +2,7 @@
 # TODO: This needs to install from latest github release
 # FIXME
 - name: Install GitHub CLI tool
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: gh
     state: present

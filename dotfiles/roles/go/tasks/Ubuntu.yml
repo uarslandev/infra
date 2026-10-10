@@ -1,5 +1,6 @@
 ---
 - name: "Go-Lang | Install dependencies"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     pkg:
       - 'curl'
@@ -111,4 +112,6 @@
       notify:
         - Remove extracted go directory
 
-  when: go_latest_version not in current_go_version.stdout|default('')
+  when:
+    - can_install_packages | default(false)
+    - go_latest_version not in current_go_version.stdout|default('')

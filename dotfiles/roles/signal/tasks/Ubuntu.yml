@@ -1,5 +1,6 @@
 ---
 - name: "{{ role_name }} | Ubuntu | Remove Signal Flatpak"
+  when: can_install_packages | default(false)
   community.general.flatpak:
     name: org.signal.Signal
     state: absent
@@ -7,6 +8,7 @@
   failed_when: false
 
 - name: "{{ role_name }} | Ubuntu | Install Signal APT prerequisites"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name:
       - ca-certificates
@@ -16,6 +18,7 @@
   become: true
 
 - name: "{{ role_name }} | Ubuntu | Download Signal signing key"
+  when: can_install_packages | default(false)
   ansible.builtin.get_url:
     url: https://updates.signal.org/desktop/apt/keys.asc
     dest: /usr/share/keyrings/signal-desktop-keyring.asc
@@ -39,9 +42,12 @@
       - /usr/share/keyrings/signal-desktop-keyring.asc
   become: true
   changed_when: signal_key_download.changed or not signal_keyring.stat.exists
-  when: signal_key_download.changed or not signal_keyring.stat.exists
+  when:
+    - can_install_packages | default(false)
+    - signal_key_download.changed or not signal_keyring.stat.exists
 
 - name: "{{ role_name }} | Ubuntu | Add Signal APT repository"
+  when: can_install_packages | default(false)
   ansible.builtin.get_url:
     url: https://updates.signal.org/static/desktop/apt/signal-desktop.sources
     dest: /etc/apt/sources.list.d/signal-desktop.sources
@@ -50,6 +56,7 @@
   register: signal_sources
 
 - name: "{{ role_name }} | Ubuntu | Install Signal Desktop"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: signal-desktop
     state: present

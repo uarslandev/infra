@@ -33,6 +33,7 @@
 
 - name: BAT | Install BAT
   when:
+    - can_install_packages | default(false)
     - target_bat_version not in current_bat_version.stdout|default('')
     - ansible_facts['machine'] != 'aarch64'
   block:

@@ -1,5 +1,6 @@
 ---
 - name: "{{ role_name }} | Ubuntu | Install Fabric system dependencies"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: "{{ fabric_ubuntu_packages }}"
     state: present

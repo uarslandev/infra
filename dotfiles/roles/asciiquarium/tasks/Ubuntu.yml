@@ -66,4 +66,6 @@
       notify:
         - Remove extracted tarball
 
-  when: is_installed | length < 1
+  when:
+    - can_install_packages | default(false)
+    - is_installed | length < 1

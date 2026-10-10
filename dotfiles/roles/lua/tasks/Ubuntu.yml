@@ -1,10 +1,12 @@
 ---
 - name: Lua | Update APT cache
+  when: can_install_packages | default(false)
   apt:
     update_cache: true
   become: true
 
 - name: Lua | Install Lua
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: "{{ item }}"
   become: true

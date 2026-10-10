@@ -1,5 +1,6 @@
 ---
 - name: "Python | Install"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name:
       - python3

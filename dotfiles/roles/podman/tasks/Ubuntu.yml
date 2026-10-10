@@ -1,5 +1,6 @@
 ---
 - name: "Podman | Install Podman"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name:
       - "{{ item }}"
@@ -10,7 +11,9 @@
 
 # install if WSL
 - name: "Podman | Install Podman WSL Dependencies"
-  when: ansible_host_environment_is_wsl
+  when:
+    - can_install_packages | default(false)
+    - ansible_host_environment_is_wsl
   ansible.builtin.apt:
     name:
       - "{{ item }}"

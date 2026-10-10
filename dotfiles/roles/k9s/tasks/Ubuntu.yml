@@ -80,7 +80,9 @@
       notify:
         - Remove extracted k9s directory
 
-  when: k9s_latest_release not in current_k9s_version.stdout|default('')
+  when:
+    - can_install_packages | default(false)
+    - k9s_latest_release not in current_k9s_version.stdout|default('')
 
 - name: "K9s | Ensure k9s config directory exists"
   ansible.builtin.file:

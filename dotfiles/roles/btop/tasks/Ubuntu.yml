@@ -1,5 +1,6 @@
 ---
 - name: "BTOP | Ubuntu | Install btop package"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: btop
     state: present
@@ -7,6 +8,7 @@
   become: true
 
 - name: "BTOP | Ubuntu | Remove old bpytop if installed"
+  when: can_install_packages | default(false)
   ansible.builtin.apt:
     name: bpytop
     state: absent

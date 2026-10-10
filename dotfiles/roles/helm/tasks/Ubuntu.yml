@@ -7,7 +7,9 @@
 
 # Try APT repository method first
 - name: "Helm | Ubuntu | Install via APT repository"
-  when: helm_check.rc != 0
+  when:
+    - can_install_packages | default(false)
+    - helm_check.rc != 0
   block:
     - name: Helm | Ensure keyrings directory exists
       ansible.builtin.file:
@@ -61,6 +63,7 @@
 # Fallback to GitHub release if APT method failed
 - name: "Helm | Ubuntu | Install from GitHub release"
   when:
+    - can_install_packages | default(false)
     - helm_check.rc != 0
     - helm_apt_failed is defined
   block:

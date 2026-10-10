@@ -1,5 +1,6 @@
 ---
 - name: "{{ role_name }} | Install dependencies"
+  when: can_install_packages | default(false)
   become: true
   ansible.builtin.apt:
     name:
@@ -40,7 +41,9 @@
     dest: /usr/local/bin/yazi
     mode: "0755"
     remote_src: true
-  when: yazi_check.rc != 0
+  when:
+    - can_install_packages | default(false)
+    - yazi_check.rc != 0
 
 - name: "{{ role_name }} | Install ya binary"
   become: true
@@ -49,4 +52,6 @@
     dest: /usr/local/bin/ya
     mode: "0755"
     remote_src: true
-  when: yazi_check.rc != 0
+  when:
+    - can_install_packages | default(false)
+    - yazi_check.rc != 0
