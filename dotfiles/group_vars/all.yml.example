@@ -104,7 +104,6 @@ default_roles:
   - herdr          # Terminal workspace for parallel coding agents
   - tern           # Multiplexing terminal (settings.json sync; app installed by hand)
   - flatpak        # Universal Linux package manager
-  - nala           # Better apt frontend for Ubuntu/Debian
   - zsh            # Zsh shell with oh-my-zsh (does not change your login shell)
 
   # === AI & Local LLM ===

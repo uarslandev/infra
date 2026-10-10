@@ -79,7 +79,6 @@ default_roles:
   - herdr
   - tern
   - flatpak
-  - nala
   - zsh
   # === AI & local LLM ===
   - ollama
