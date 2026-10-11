@@ -86,6 +86,17 @@
     - op_authenticated | default(false)
     - berkeley_mono_item.rc != 0
 
+- name: "Fonts | BerkeleyMono | Check for fc-cache"
+  ansible.builtin.command:
+    argv:
+      - fc-cache
+      - --version
+  register: berkeley_mono_fc_cache
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: berkeley_mono_refresh_cache | default(false)
+
 - name: "Fonts | BerkeleyMono | Refresh font cache"
   ansible.builtin.command:
     argv:
@@ -97,3 +108,13 @@
     - berkeley_mono_refresh_cache | default(false)
     - berkeley_mono_downloads is defined
     - berkeley_mono_downloads is changed
+    - berkeley_mono_fc_cache.rc | default(1) == 0
+
+- name: "Fonts | BerkeleyMono | Warn when fontconfig (fc-cache) is unavailable"
+  ansible.builtin.debug:
+    msg: "fc-cache not found. Install fontconfig, then rerun: dotfiles -t fonts"
+  when:
+    - berkeley_mono_refresh_cache | default(false)
+    - berkeley_mono_downloads is defined
+    - berkeley_mono_downloads is changed
+    - berkeley_mono_fc_cache.rc | default(1) != 0

@@ -1,4 +1,12 @@
 ---
+- name: "Fonts | Fedora | Install font tooling"
+  ansible.builtin.dnf:
+    name:
+      - fontconfig
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
 - name: "Fonts | Fedora | Install public Nerd Font"
   ansible.builtin.include_tasks: public_nerd_font.yml
 

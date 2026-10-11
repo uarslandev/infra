@@ -1,4 +1,12 @@
 ---
+- name: "Fonts | Ubuntu | Install font tooling"
+  ansible.builtin.apt:
+    name:
+      - fontconfig
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
 - name: "Fonts | Ubuntu | Install public Nerd Font"
   ansible.builtin.include_tasks: public_nerd_font.yml
 
