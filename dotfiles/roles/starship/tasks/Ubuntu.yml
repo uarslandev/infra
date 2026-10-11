@@ -1,5 +1,5 @@
 ---
-- name: "Starship | {{ ansible_facts['distribution'] }} | Install Starship"
+- name: "Starship | {{ ansible_facts['distribution'] }} | Check if Starship is installed"
   ansible.builtin.command:
     cmd: which starship
   register: starship_installed
@@ -7,8 +7,11 @@
   failed_when: false
 
 - name: "Starship | {{ ansible_facts['distribution'] }} | Install Starship"
-  when: starship_installed.rc != 0
+  when:
+    - can_install_packages | default(false)
+    - starship_installed.rc != 0
   ansible.builtin.shell:
-    cmd: curl -fsSL https://starship.rs/install.sh | sudo sh -s -- --force
+    cmd: curl -fsSL https://starship.rs/install.sh | sh -s -- --force
   args:
     creates: /usr/local/bin/starship
+  become: true
