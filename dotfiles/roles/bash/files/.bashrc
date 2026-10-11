@@ -122,11 +122,10 @@ plugins=(
 #      plugins+=(tmux-autoattach)
 #  fi
 
-if [[ -f "$HOME/.config/bash/.bash_private" ]]; then
-    source "$HOME/.config/bash/.bash_private"
-fi
-
-for file in $HOME/.config/bash/*.sh; do
+# PATH setup only (paths_functions.sh defines addToPath/addToPathFront; paths_vars.sh
+# uses them). Must load before oh-my-bash so its plugins (zoxide, kubectl) find
+# binaries in ~/.local/bin installed without sudo.
+for file in $HOME/.config/bash/paths_*.sh; do
   source "$file"
 done
 
@@ -159,6 +158,14 @@ fi
 # Example aliases
 # alias bashconfig="mate ~/.bashrc"
 # alias ohmybash="mate ~/.oh-my-bash"
+
+if [[ -f "$HOME/.config/bash/.bash_private" ]]; then
+    source "$HOME/.config/bash/.bash_private"
+fi
+
+for file in $HOME/.config/bash/*.sh; do
+  source "$file"
+done
 
 [ -f ~/.bash_lumen ] && source ~/.bash_lumen
 [ -f ~/.fzf.bash ]   && source ~/.fzf.bash
