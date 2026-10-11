@@ -30,12 +30,16 @@
   register: tree_sitter_cli_check
   changed_when: false
   failed_when: false
+  check_mode: false
   no_log: true
 
 - name: "Neovim | {{ ansible_facts['distribution'] }} | Set tree-sitter CLI facts"
   ansible.builtin.set_fact:
     tree_sitter_cli_min_version: "0.26.1"
     tree_sitter_cli_version: "{{ (tree_sitter_cli_check.stdout | regex_search('\\d+\\.\\d+\\.\\d+')) | default('') }}"
+    tree_sitter_cli_install_dir: >-
+      {{ '/usr/local/bin' if (can_install_packages | default(false)) else ansible_facts['user_dir'] + '/.local/bin' }}
+    tree_sitter_cli_become: "{{ can_install_packages | default(false) }}"
     tree_sitter_cli_arch: >-
       {{ 'x64' if ansible_facts['architecture'] in ['x86_64', 'amd64']
       else 'arm64' if ansible_facts['architecture'] in ['aarch64', 'arm64']
@@ -43,7 +47,6 @@
 
 - name: "Neovim | {{ ansible_facts['distribution'] }} | Install compatible tree-sitter CLI"
   when:
-    - can_install_packages | default(false)
     - tree_sitter_cli_arch != ''
     - tree_sitter_cli_check.rc != 0 or tree_sitter_cli_version == '' or (tree_sitter_cli_version is version(tree_sitter_cli_min_version, '<'))
   block:
@@ -99,12 +102,12 @@
       register: tree_sitter_cli_binary
       when: tree_sitter_cli_download_url != ''
 
-    - name: "Neovim | {{ ansible_facts['distribution'] }} | Ensure /usr/local/bin exists"
+    - name: "Neovim | {{ ansible_facts['distribution'] }} | Ensure tree-sitter CLI install directory exists"
       ansible.builtin.file:
-        path: /usr/local/bin
+        path: "{{ tree_sitter_cli_install_dir }}"
         state: directory
         mode: "0755"
-      become: true
+      become: "{{ tree_sitter_cli_become }}"
       when:
         - tree_sitter_cli_download_url != ''
         - tree_sitter_cli_binary.matched | default(0) > 0
@@ -112,10 +115,10 @@
     - name: "Neovim | {{ ansible_facts['distribution'] }} | Install tree-sitter CLI"
       ansible.builtin.copy:
         src: "{{ tree_sitter_cli_binary.files[0].path }}"
-        dest: /usr/local/bin/tree-sitter
+        dest: "{{ tree_sitter_cli_install_dir }}/tree-sitter"
         mode: "0755"
         remote_src: true
-      become: true
+      become: "{{ tree_sitter_cli_become }}"
       when:
         - tree_sitter_cli_download_url != ''
         - tree_sitter_cli_binary.matched | default(0) > 0
