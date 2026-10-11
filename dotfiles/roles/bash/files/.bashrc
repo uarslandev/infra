@@ -122,6 +122,14 @@ plugins=(
 #      plugins+=(tmux-autoattach)
 #  fi
 
+if [[ -f "$HOME/.config/bash/.bash_private" ]]; then
+    source "$HOME/.config/bash/.bash_private"
+fi
+
+for file in $HOME/.config/bash/*.sh; do
+  source "$file"
+done
+
 source "$OSH"/oh-my-bash.sh
 
 # User configuration
@@ -151,14 +159,6 @@ fi
 # Example aliases
 # alias bashconfig="mate ~/.bashrc"
 # alias ohmybash="mate ~/.oh-my-bash"
-
-if [[ -f "$HOME/.config/bash/.bash_private" ]]; then
-    source "$HOME/.config/bash/.bash_private"
-fi
-
-for file in $HOME/.config/bash/*.sh; do
-  source "$file"
-done
 
 [ -f ~/.bash_lumen ] && source ~/.bash_lumen
 [ -f ~/.fzf.bash ]   && source ~/.fzf.bash

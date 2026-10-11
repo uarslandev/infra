@@ -15,3 +15,22 @@
   args:
     creates: /usr/local/bin/starship
   become: true
+
+- name: "Starship | {{ ansible_facts['distribution'] }} | Install to user directory (no sudo)"
+  when:
+    - not (can_install_packages | default(false))
+    - starship_installed.rc != 0
+  block:
+    - name: "Starship | Create ~/.local/bin directory"
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+        state: directory
+        mode: '0755'
+
+    - name: "Starship | Download and install to user directory"
+      ansible.builtin.shell:
+        cmd: |
+          curl -fsSL https://starship.rs/install.sh | \
+          sh -s -- --bin-dir {{ ansible_facts['env']['HOME'] }}/.local/bin --force
+      args:
+        creates: "{{ ansible_facts['env']['HOME'] }}/.local/bin/starship"
