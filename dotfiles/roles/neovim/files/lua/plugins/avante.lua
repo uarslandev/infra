@@ -1,7 +1,7 @@
 return {
   "yetone/avante.nvim",
   event = "VeryLazy",
-  version = '*', -- set this if you want to always pull the latest change
+  version = false, -- Never set this value to "*"! Never! (see upstream README)
   opts = {
     provider = "openai",
     auto_suggestions_provider = "openai",
@@ -17,6 +17,7 @@ return {
     "stevearc/dressing.nvim",
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
+    { "ColinKennedy/mega.cmdparse", dependencies = { "ColinKennedy/mega.logging" } },
     -- The below dependencies are optional
     "hrsh7th/nvim-cmp",
     "nvim-tree/nvim-web-devicons", -- or echasnovski/mini.icons
