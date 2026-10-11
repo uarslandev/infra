@@ -1,4 +1,7 @@
 ---
+- name: "Fonts | Fedora | Install public Nerd Font"
+  ansible.builtin.include_tasks: public_nerd_font.yml
+
 - name: "Fonts | Fedora | Install BerkeleyMono Nerd Font"
   ansible.builtin.include_tasks: private_berkeley_mono.yml
   vars:

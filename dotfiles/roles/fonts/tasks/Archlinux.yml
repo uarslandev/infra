@@ -7,6 +7,9 @@
   become: true
   when: can_install_packages | default(false)
 
+- name: "Fonts | {{ ansible_facts['distribution'] }} | Install public Nerd Font"
+  ansible.builtin.include_tasks: public_nerd_font.yml
+
 - name: "Fonts | {{ ansible_facts['distribution'] }} | Install BerkeleyMono Nerd Font"
   ansible.builtin.include_tasks: private_berkeley_mono.yml
   vars:

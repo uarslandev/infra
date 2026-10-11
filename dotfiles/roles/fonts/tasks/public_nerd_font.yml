@@ -1,0 +1,37 @@
+---
+- name: "Fonts | Nerd Font | Ensure install directory exists"
+  ansible.builtin.file:
+    path: "{{ nerd_font_install_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: "Fonts | Nerd Font | Check installed font files"
+  ansible.builtin.stat:
+    path: "{{ nerd_font_install_dir }}/{{ nerd_font_marker_file }}"
+  register: nerd_font_marker
+
+- name: "Fonts | Nerd Font | Download and extract {{ nerd_font_name }}"
+  ansible.builtin.unarchive:
+    src: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/{{ nerd_font_name }}.tar.xz"
+    dest: "{{ nerd_font_install_dir }}"
+    remote_src: true
+    creates: "{{ nerd_font_install_dir }}/{{ nerd_font_marker_file }}"
+  register: nerd_font_extract
+  failed_when: false
+  when: not nerd_font_marker.stat.exists
+
+- name: "Fonts | Nerd Font | Warn if installation failed"
+  ansible.builtin.debug:
+    msg: "Could not install {{ nerd_font_name }} Nerd Font (network?). Rerun: dotfiles -t fonts"
+  when:
+    - not nerd_font_marker.stat.exists
+    - nerd_font_extract is failed
+
+- name: "Fonts | Nerd Font | Refresh font cache"
+  ansible.builtin.command:
+    argv:
+      - fc-cache
+      - -f
+      - "{{ nerd_font_install_dir }}"
+  changed_when: true
+  when: nerd_font_extract is changed
