@@ -184,14 +184,17 @@
       register: nvim_latest_release
       no_log: true
 
-    - name: "Neovim | Set version fact"
+    - name: "Neovim | Set version and arch facts"
       ansible.builtin.set_fact:
         nvim_version: "{{ nvim_latest_release.json.tag_name }}"
+        nvim_arch: "{{ ansible_facts['machine'] | replace('aarch64', 'arm64') }}"
 
-    - name: "Neovim | Download AppImage"
-      ansible.builtin.get_url:
-        url: "https://github.com/neovim/neovim/releases/download/{{ nvim_version }}/nvim.appimage"
-        dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/nvim"
+    - name: "Neovim | Download and extract release tarball"
+      ansible.builtin.unarchive:
+        src: "https://github.com/neovim/neovim/releases/download/{{ nvim_version }}/nvim-linux-{{ nvim_arch }}.tar.gz"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.local"
+        remote_src: yes
+        strip_components: 1
         mode: '0755'
       register: nvim_user_install
 
