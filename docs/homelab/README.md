@@ -91,7 +91,8 @@ All secrets live in `secrets/homelab.sops.yml`; `.env` files are never committed
 
 ```bash
 make secret NAME=paperless_db_password      # random value straight into sops, never printed
-sops secrets/homelab.sops.yml                # add/edit values you already have (tokens, API keys)
+make set-secret NAME=cloudflare_dns_api_token   # value you already have: hidden prompt, never in history
+sops secrets/homelab.sops.yml                # edit several values in an editor
 sops decrypt --extract '["name"]' secrets/homelab.sops.yml   # read one value
 ```
 

@@ -3,7 +3,7 @@
 # ==============================================================================
 
 .DEFAULT_GOAL := help
-.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config
+.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret
 
 help:
 	@echo "Infrastructure & Dotfiles Automation"
@@ -24,6 +24,7 @@ help:
 	@echo "  make new-stack NAME=app IMAGE=vendor/app:1.2.3 PORT=8080   Scaffold a new stack"
 	@echo "  make secret NAME=app_db_password [LENGTH=40]   Random secret into sops (never printed)"
 	@echo "  make ssh-config     SSH config for all homelab hosts (WSL + Windows) from the inventory"
+	@echo "  make set-secret NAME=cloudflare_dns_api_token   Store a token you have (hidden prompt, no editor)"
 
 apply:
 	./bin/dotfiles
@@ -74,3 +75,6 @@ secret:
 
 ssh-config:
 	scripts/homelab/ssh-config.sh --windows
+
+set-secret:
+	scripts/homelab/set-secret.sh $(NAME)
