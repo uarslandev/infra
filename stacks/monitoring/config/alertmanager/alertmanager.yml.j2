@@ -1,6 +1,16 @@
 # {{ ansible_managed }}
+{% set email_enabled = alert_smtp_password is defined and alert_email_to is defined %}
+{% if email_enabled %}
+global:
+  smtp_smarthost: "{{ alert_smtp_smarthost }}"
+  smtp_from: "Homelab alerts <{{ alert_smtp_username }}>"
+  smtp_auth_username: "{{ alert_smtp_username }}"
+  smtp_auth_password: "{{ alert_smtp_password }}"
+  smtp_require_tls: true
+
+{% endif %}
 route:
-  receiver: {{ 'telegram' if telegram_bot_token is defined else 'none' }}
+  receiver: {{ 'email' if email_enabled else 'none' }}
   group_by: [alertname, host]
   group_wait: 30s
   group_interval: 5m
@@ -8,10 +18,9 @@ route:
 
 receivers:
   - name: none
-{% if telegram_bot_token is defined %}
-  - name: telegram
-    telegram_configs:
-      - bot_token: "{{ telegram_bot_token }}"
-        chat_id: {{ telegram_chat_id | int }}
+{% if email_enabled %}
+  - name: email
+    email_configs:
+      - to: "{{ alert_email_to }}"
         send_resolved: true
 {% endif %}

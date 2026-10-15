@@ -26,7 +26,8 @@ Proxmox VE (boot SSD: OS only)
   user `admin`, password: `sops decrypt --extract '["grafana_admin_password"]' secrets/homelab.sops.yml`).
   Every host runs `prometheus-node-exporter` (ZFS + SMART on the Proxmox host); HTTP/DNS checks via blackbox;
   Proxmox via a read-only `pve-exporter@pve` token. Alerts (rules in `stacks/monitoring/config/prometheus/rules/`)
-  go to Telegram once `telegram_bot_token` and `telegram_chat_id` are in `secrets/homelab.sops.yml`.
+  are e-mailed via Gmail SMTP once `alert_email_to`, `alert_smtp_username` and `alert_smtp_password`
+  (a Gmail app password, not the account password) are in `secrets/homelab.sops.yml`.
 - **Updates**: Renovate (`renovate.json`) opens PRs for new image/provider/collection versions; majors need approval.
 - Guest disks live on `tank`, never on the boot SSD. Infra uses the router as DNS, so it does not depend on AdGuard.
 

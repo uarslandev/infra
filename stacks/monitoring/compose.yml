@@ -1,4 +1,4 @@
-# Monitoring: Prometheus + Alertmanager (Telegram) + Grafana, cAdvisor, blackbox probes, Proxmox exporter.
+# Monitoring: Prometheus + Alertmanager (e-mail) + Grafana, cAdvisor, blackbox probes, Proxmox exporter.
 # Host metrics come from prometheus-node-exporter on every host (Ansible role node_exporter).
 # Config files in ./config are rendered by Ansible (roles/stacks/tasks/config/monitoring.yml).
 name: monitoring

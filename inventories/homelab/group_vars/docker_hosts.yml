@@ -39,3 +39,7 @@ monitoring_dashboards:
   - { name: blackbox-exporter, id: 7587, revision: 3 }
   - { name: proxmox-pve-exporter, id: 10347, revision: 5 }
   - { name: cadvisor, id: 19792, revision: 6 }
+
+# Alert e-mails via Gmail SMTP (app password). Credentials: alert_smtp_username,
+# alert_smtp_password, alert_email_to in secrets/homelab.sops.yml.
+alert_smtp_smarthost: smtp.gmail.com:587
