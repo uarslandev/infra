@@ -3,7 +3,7 @@
 # ==============================================================================
 
 .DEFAULT_GOAL := help
-.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint
+.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint new-stack
 
 help:
 	@echo "Infrastructure & Dotfiles Automation"
@@ -21,6 +21,7 @@ help:
 	@echo "  make homelab-check  Ansible dry run with diff"
 	@echo "  make homelab        Apply homelab.yml"
 	@echo "  make homelab-lint   Lint + validate homelab code"
+	@echo "  make new-stack NAME=app IMAGE=vendor/app:1.2.3 PORT=8080   Scaffold a new stack"
 
 apply:
 	./bin/dotfiles
@@ -62,3 +63,6 @@ homelab-lint:
 	terraform -chdir=terraform/proxmox fmt -check -recursive
 	terraform -chdir=terraform/proxmox validate
 	scripts/homelab/check-secrets.sh
+
+new-stack:
+	scripts/homelab/new-stack.sh $(NAME) $(IMAGE) $(PORT)

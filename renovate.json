@@ -1,0 +1,50 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits", ":timezone(Europe/Berlin)"],
+  "schedule": ["before 6am on saturday"],
+  "dependencyDashboard": true,
+  "labels": ["dependencies"],
+  "ansible-galaxy": {
+    "managerFilePatterns": ["/(^|/)requirements/[^/]+\\.ya?ml$/"]
+  },
+  "packageRules": [
+    {
+      "description": "Major updates only after explicit approval on the Dependency Dashboard (DB migrations, breaking changes).",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Immich server and ML must always move together.",
+      "matchPackageNames": ["ghcr.io/immich-app/immich-server", "ghcr.io/immich-app/immich-machine-learning"],
+      "groupName": "immich"
+    },
+    {
+      "description": "Immich's Postgres and Valkey images are pinned by Immich's release notes, not by us.",
+      "matchPackageNames": ["ghcr.io/immich-app/postgres", "docker.io/valkey/valkey"],
+      "enabled": false
+    },
+    {
+      "description": "Nextcloud: one major at a time; app and cron containers together.",
+      "matchPackageNames": ["nextcloud"],
+      "groupName": "nextcloud"
+    },
+    {
+      "description": "linuxserver.io tags look like v2.1.3-ls227.",
+      "matchPackageNames": ["lscr.io/linuxserver/**"],
+      "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)-ls(?<build>\\d+)$"
+    },
+    {
+      "matchManagers": ["terraform"],
+      "groupName": "terraform providers"
+    },
+    {
+      "matchManagers": ["ansible-galaxy"],
+      "groupName": "ansible collections"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "automerge": true
+    }
+  ]
+}
