@@ -1,0 +1,14 @@
+---
+- name: Stacks | Root directory
+  ansible.builtin.file:
+    path: "{{ stacks_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Stacks | Deploy each stack
+  ansible.builtin.include_tasks: stack.yml
+  loop: "{{ stacks_enabled }}"
+  loop_control:
+    loop_var: stack

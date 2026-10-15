@@ -1,0 +1,32 @@
+---
+- name: "Stacks | Directory for {{ stack }}"
+  ansible.builtin.file:
+    path: "{{ stacks_root }}/{{ stack }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: "Stacks | compose.yml for {{ stack }}"
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/stacks/{{ stack }}/compose.yml"
+    dest: "{{ stacks_root }}/{{ stack }}/compose.yml"
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: "Stacks | .env (secrets) for {{ stack }}"
+  ansible.builtin.template:
+    src: "{{ stack }}.env.j2"
+    dest: "{{ stacks_root }}/{{ stack }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: "Stacks | Up {{ stack }}"
+  community.docker.docker_compose_v2:
+    project_src: "{{ stacks_root }}/{{ stack }}"
+    state: present
+    pull: missing
+    remove_orphans: true

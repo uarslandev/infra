@@ -1,0 +1,19 @@
+---
+- name: Sanoid | Ensure package
+  ansible.builtin.apt:
+    name: sanoid
+    state: present
+
+- name: Sanoid | Deploy config
+  ansible.builtin.template:
+    src: sanoid.conf.j2
+    dest: /etc/sanoid/sanoid.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Sanoid | Enable timer
+  ansible.builtin.systemd_service:
+    name: sanoid.timer
+    enabled: true
+    state: started

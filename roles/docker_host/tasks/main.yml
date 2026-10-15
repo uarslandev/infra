@@ -1,0 +1,79 @@
+---
+- name: Docker host | Set timezone
+  community.general.timezone:
+    name: "{{ homelab_timezone }}"
+
+- name: Docker host | Base packages
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - unattended-upgrades
+      - qemu-guest-agent
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Docker host | Enable unattended security upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Docker host | Docker apt repository
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: [deb]
+    uris: https://download.docker.com/linux/ubuntu
+    suites: ["{{ ansible_facts['distribution_release'] }}"]
+    components: [stable]
+    architectures: [amd64]
+    signed_by: https://download.docker.com/linux/ubuntu/gpg
+  register: docker_host_repo
+
+- name: Docker host | Install Docker Engine + Compose plugin
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: "{{ docker_host_repo is changed }}"
+
+- name: Docker host | Daemon config (log rotation)
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: "{{ docker_host_daemon_config | to_nice_json }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart docker
+
+- name: Docker host | Enable Docker
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Docker host | Admin user may use docker
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true
+
+- name: Docker host | Mount virtiofs shares
+  ansible.posix.mount:
+    src: "{{ item.key }}"
+    path: "{{ item.value }}"
+    fstype: virtiofs
+    opts: defaults,nofail
+    state: mounted
+  loop: "{{ docker_host_virtiofs_mounts | dict2items }}"
+  loop_control:
+    label: "{{ item.value }}"

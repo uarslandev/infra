@@ -8,3 +8,19 @@ __pycache__/
 *.bak
 .cache/
 vault.secret
+
+# Homelab: Terraform state and caches (state can contain secrets)
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+# never commit keys or decrypted secrets
+keys.txt
+*.agekey
+*.dec
+*.dec.*
+.env
+
+# Claude Code personal settings
+.claude/settings.local.json

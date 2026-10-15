@@ -1,0 +1,12 @@
+# Uptime Kuma (monitoring). Data: ZFS tank/appdata/uptime-kuma.
+name: uptime-kuma
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2.5.6
+    container_name: uptime-kuma
+    ports:
+      - "3001:3001"
+    volumes:
+      - /srv/appdata/uptime-kuma:/app/data
+    restart: unless-stopped

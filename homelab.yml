@@ -1,0 +1,52 @@
+---
+# ==============================================================================
+# Homelab playbook (separate from the dev-env main.yml)
+#   make homelab            # or:
+#   ANSIBLE_CONFIG=ansible.cfg ansible-playbook -i inventories/homelab homelab.yml
+# Secrets: secrets/homelab.sops.yml (SOPS + age, decrypted in memory only).
+# ==============================================================================
+
+- name: Proxmox host
+  hosts: proxmox
+  tags: [proxmox]
+  roles:
+    - proxmox_host
+    - zfs_datasets
+    - sanoid
+
+- name: Docker host
+  hosts: docker_hosts
+  tags: [apps]
+  vars:
+    can_become: true # input of the shared dev-env `common` role
+  pre_tasks:
+    - name: Load SOPS secrets
+      community.sops.load_vars:
+        file: "{{ homelab_secrets_file }}"
+      tags: [always]
+  roles:
+    - common
+    - docker_host
+    - stacks
+
+- name: AdGuard Home
+  hosts: adguard
+  tags: [adguard]
+  pre_tasks:
+    - name: Load SOPS secrets
+      community.sops.load_vars:
+        file: "{{ homelab_secrets_file }}"
+      tags: [always]
+  roles:
+    - adguard
+
+- name: WireGuard
+  hosts: wireguard
+  tags: [wireguard]
+  pre_tasks:
+    - name: Load SOPS secrets
+      community.sops.load_vars:
+        file: "{{ homelab_secrets_file }}"
+      tags: [always]
+  roles:
+    - wireguard

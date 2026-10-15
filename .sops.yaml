@@ -1,0 +1,5 @@
+# SOPS encryption rules. Only the age PUBLIC key lives here; the private key stays on the admin PC
+# (~/.config/sops/age/keys.txt) and is never committed.
+creation_rules:
+  - path_regex: (^|/).*\.sops\.(ya?ml|env|json)$
+    age: age1d56gnplfmal9cux582aujutngtt9d39xv6jmgtxlc38gxfaa0gcswgtjfg

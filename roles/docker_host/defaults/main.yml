@@ -1,0 +1,7 @@
+---
+docker_host_virtiofs_mounts: {}
+docker_host_daemon_config:
+  log-driver: local
+  log-opts:
+    max-size: 10m
+    max-file: "3"

@@ -1,0 +1,10 @@
+---
+# Only creates datasets / sets properties. Never destroys anything (state: present only).
+- name: ZFS | Ensure datasets exist
+  community.general.zfs:
+    name: "{{ item.name }}"
+    state: present
+    extra_zfs_properties: "{{ zfs_datasets_default_properties | combine(item.properties | default({})) }}"
+  loop: "{{ zfs_datasets_list }}"
+  loop_control:
+    label: "{{ item.name }}"

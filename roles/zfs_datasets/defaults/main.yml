@@ -1,0 +1,4 @@
+---
+zfs_datasets_list: []
+zfs_datasets_default_properties:
+  compression: lz4

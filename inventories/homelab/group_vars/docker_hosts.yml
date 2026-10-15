@@ -1,0 +1,21 @@
+---
+# virtiofs shares from the Proxmox host (tag => mount point). Tags match terraform virtiofs_shares.
+docker_host_virtiofs_mounts:
+  immich: /srv/immich
+  nextcloud: /srv/nextcloud
+  jellyfin: /srv/jellyfin
+  syncthing: /srv/syncthing
+  appdata: /srv/appdata
+
+# Stacks deployed from stacks/<name>/compose.yml, in this order.
+stacks_enabled:
+  - cloudflared
+  - npm
+  - immich
+  - nextcloud
+  - jellyfin
+  - syncthing
+  - teamspeak
+  - uptime-kuma
+
+stacks_root: /opt/stacks

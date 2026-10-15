@@ -1,0 +1,20 @@
+# Jellyfin. Data: ZFS tank/jellyfin (virtiofs -> /srv/jellyfin). CPU transcoding (no GPU passthrough).
+name: jellyfin
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.11.11
+    container_name: jellyfin
+    user: "1000:1000"
+    ports:
+      - "8096:8096/tcp"
+      - "7359:7359/udp"
+    volumes:
+      - /srv/jellyfin/config:/config
+      - /srv/jellyfin/cache:/cache
+      - /srv/jellyfin/media:/media
+    environment:
+      JELLYFIN_PublishedServerUrl: ${JELLYFIN_PUBLISHED_URL}
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

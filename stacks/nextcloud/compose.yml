@@ -1,0 +1,57 @@
+# Nextcloud. Data: ZFS tank/nextcloud (virtiofs -> /srv/nextcloud).
+# Upgrade one major version at a time (34 -> 35 -> ...), never skip.
+name: nextcloud
+
+services:
+  db:
+    image: mariadb:12.3.2
+    command: --transaction-isolation=READ-COMMITTED --log-bin-trust-function-creators=1
+    volumes:
+      - /srv/nextcloud/db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.10.0-alpine
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  app:
+    image: nextcloud:34.0.2-apache
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - /srv/nextcloud/html:/var/www/html
+      - /srv/nextcloud/data:/var/www/html/data
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_HOST: db
+      REDIS_HOST: redis
+    restart: unless-stopped
+
+  cron:
+    image: nextcloud:34.0.2-apache
+    entrypoint: /cron.sh
+    depends_on:
+      - app
+    volumes:
+      - /srv/nextcloud/html:/var/www/html
+      - /srv/nextcloud/data:/var/www/html/data
+    restart: unless-stopped

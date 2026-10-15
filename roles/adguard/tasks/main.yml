@@ -1,0 +1,60 @@
+---
+- name: AdGuard | resolved drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/resolved.conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: AdGuard | Free port 53 (disable systemd-resolved stub listener)
+  ansible.builtin.copy:
+    dest: /etc/systemd/resolved.conf.d/adguard.conf
+    content: |
+      [Resolve]
+      DNSStubListener=no
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart systemd-resolved
+
+# /etc/resolv.conf is written by Proxmox (LXC dns setting); do not replace it here.
+
+- name: AdGuard | Flush handlers before starting DNS
+  ansible.builtin.meta: flush_handlers
+
+- name: AdGuard | Download pinned release
+  ansible.builtin.get_url:
+    url: "https://github.com/AdguardTeam/AdGuardHome/releases/download/{{ adguard_version }}/AdGuardHome_linux_amd64.tar.gz"
+    dest: "/opt/AdGuardHome_{{ adguard_version }}.tar.gz"
+    checksum: "sha256:{{ adguard_sha256 }}"
+    mode: "0644"
+
+- name: AdGuard | Unpack
+  ansible.builtin.unarchive:
+    src: "/opt/AdGuardHome_{{ adguard_version }}.tar.gz"
+    dest: /opt
+    remote_src: true
+    creates: /opt/AdGuardHome/AdGuardHome
+
+# Initial config only (force: false): later changes made in the web UI are kept.
+- name: AdGuard | Initial config from SOPS
+  ansible.builtin.copy:
+    content: "{{ adguard_config_yaml }}"
+    dest: /opt/AdGuardHome/AdGuardHome.yaml
+    owner: root
+    group: root
+    mode: "0600"
+    force: false
+  no_log: true
+
+- name: AdGuard | Install service
+  ansible.builtin.command: /opt/AdGuardHome/AdGuardHome -s install
+  args:
+    creates: /etc/systemd/system/AdGuardHome.service
+
+- name: AdGuard | Enable service
+  ansible.builtin.systemd_service:
+    name: AdGuardHome
+    enabled: true
+    state: started

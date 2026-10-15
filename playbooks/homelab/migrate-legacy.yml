@@ -1,0 +1,34 @@
+---
+# One-off migration (2026-10): moves app data from the old servarr/LXC layout into tank/appdata.
+# Idempotent (uses `creates`), copies only, never deletes the source.
+#   ANSIBLE_CONFIG=ansible.cfg ansible-playbook -i inventories/homelab playbooks/homelab/migrate-legacy.yml
+
+- name: Migrate legacy app data on the Proxmox host
+  hosts: proxmox
+  vars:
+    legacy: /tank/legacy
+    appdata: /tank/appdata
+  tasks:
+    - name: Target directories
+      ansible.builtin.file:
+        path: "{{ appdata }}/{{ item }}"
+        state: directory
+        mode: "0755"
+      loop: [npm/data, npm/letsencrypt, teamspeak, uptime-kuma]
+
+    - name: NPM | restore /data and /etc/letsencrypt from the old LXC archive
+      ansible.builtin.shell: |
+        set -euo pipefail
+        tmp=$(mktemp -d)
+        tar -xzf {{ legacy }}/lxc-npm/npm.tgz -C "$tmp"
+        cp -a "$tmp/data/." {{ appdata }}/npm/data/
+        if [ -d "$tmp/etc/letsencrypt" ]; then cp -a "$tmp/etc/letsencrypt/." {{ appdata }}/npm/letsencrypt/; fi
+        rm -rf "$tmp"
+      args:
+        executable: /bin/bash
+        creates: "{{ appdata }}/npm/data/database.sqlite"
+
+    - name: TeamSpeak | copy data from the old Dockge stack
+      ansible.builtin.command: cp -a /tank/dockge/stacks/teamspeak/ts3data/. {{ appdata }}/teamspeak/
+      args:
+        creates: "{{ appdata }}/teamspeak/ts3server.sqlitedb"

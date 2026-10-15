@@ -1,0 +1,49 @@
+---
+# Kernel module is loaded on the Proxmox host (proxmox_host role); the LXC only needs the tools.
+- name: WireGuard | Packages
+  ansible.builtin.apt:
+    name:
+      - wireguard-tools
+      - iptables
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+# Ubuntu's wg-quick AppArmor profile denies mmap of /usr/bin/bash inside unprivileged LXCs
+# (files are owned by the shifted root uid), which makes wg-quick segfault under systemd.
+# The container itself stays confined by Proxmox's LXC AppArmor profile.
+- name: WireGuard | Disable wg-quick AppArmor profile in LXC
+  ansible.builtin.file:
+    src: /etc/apparmor.d/wg-quick
+    dest: /etc/apparmor.d/disable/wg-quick
+    state: link
+  when: ansible_facts['virtualization_type'] == 'lxc'
+  notify: Unload wg-quick AppArmor profile
+
+- name: WireGuard | Apply AppArmor change before starting wg0
+  ansible.builtin.meta: flush_handlers
+
+- name: WireGuard | IP forwarding
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_file: /etc/sysctl.d/99-wireguard.conf
+    reload: true
+
+# SaveConfig=true would make wg-quick rewrite the file on every stop (drift vs. git), so it is forced off:
+# peers are managed in secrets/homelab.sops.yml.
+- name: WireGuard | wg0.conf from SOPS
+  ansible.builtin.copy:
+    content: "{{ wireguard_wg0_conf | regex_replace('(?m)^SaveConfig\\s*=\\s*true\\s*$', 'SaveConfig = false') }}"
+    dest: /etc/wireguard/wg0.conf
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  notify: Restart wg0
+
+- name: WireGuard | Enable interface
+  ansible.builtin.systemd_service:
+    name: wg-quick@wg0
+    enabled: true
+    state: started

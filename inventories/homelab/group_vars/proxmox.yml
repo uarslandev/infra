@@ -1,0 +1,26 @@
+---
+# Datasets are created if missing; existing ones are never destroyed by Ansible.
+zfs_datasets_list:
+  - name: tank/immich
+  - name: tank/nextcloud
+  - name: tank/jellyfin
+  - name: tank/syncthing
+  - name: tank/appdata
+  - name: tank/apex
+
+# sanoid retention per dataset (template name => counts).
+sanoid_templates:
+  critical: { hourly: 24, daily: 14, weekly: 8, monthly: 6, yearly: 0 }
+  standard: { hourly: 0, daily: 7, weekly: 4, monthly: 3, yearly: 0 }
+  media: { hourly: 0, daily: 3, weekly: 2, monthly: 0, yearly: 0 }
+
+sanoid_datasets:
+  tank/immich: critical
+  tank/nextcloud: critical
+  tank/appdata: standard
+  tank/apex: standard
+  tank/syncthing: standard
+  tank/jellyfin: media
+
+proxmox_host_kernel_modules:
+  - wireguard

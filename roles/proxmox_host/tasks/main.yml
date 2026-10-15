@@ -1,0 +1,32 @@
+---
+- name: Proxmox | Ensure base packages
+  ansible.builtin.apt:
+    name:
+      - sanoid
+      - smartmontools
+      - zstd
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Proxmox | Load kernel modules at boot
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/homelab.conf
+    content: |
+      # Managed by Ansible
+      {{ proxmox_host_kernel_modules | join('\n') }}
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Proxmox | Load kernel modules now
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ proxmox_host_kernel_modules }}"
+
+- name: Proxmox | Enable SMART monitoring
+  ansible.builtin.service:
+    name: smartmontools
+    enabled: true
+    state: started

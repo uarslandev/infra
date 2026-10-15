@@ -1,0 +1,18 @@
+# {{ ansible_managed }}
+# Datasets not listed here are not snapshotted by sanoid.
+
+{% for dataset, template in sanoid_datasets.items() %}
+[{{ dataset }}]
+	use_template = {{ template }}
+	recursive = no
+
+{% endfor %}
+{% for name, policy in sanoid_templates.items() %}
+[template_{{ name }}]
+{% for unit, count in policy.items() %}
+	{{ unit }} = {{ count }}
+{% endfor %}
+	autosnap = yes
+	autoprune = yes
+
+{% endfor %}

@@ -1,0 +1,3 @@
+---
+homelab_timezone: Europe/Berlin
+homelab_secrets_file: "{{ playbook_dir }}/secrets/homelab.sops.yml"
