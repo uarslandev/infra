@@ -1,0 +1,81 @@
+# Homelab as code
+
+Proxmox VE host with a ZFS mirror (`tank`). Everything except the data on `tank` can be rebuilt from this repo.
+
+## Architecture
+
+```
+Proxmox VE (boot SSD: OS only)
+├── ZFS pool "tank" (2 × 2 TB mirror)  ← the only thing that holds data
+│   ├── tank/immich      Immich library + Postgres        (critical)
+│   ├── tank/nextcloud   Nextcloud html, data, MariaDB    (critical)
+│   ├── tank/appdata     small app state: NPM, TeamSpeak, Uptime Kuma
+│   ├── tank/jellyfin    media, config, cache
+│   ├── tank/syncthing   config + data
+│   └── tank/apex        reserved for the APEX sync server
+├── VM 110 "apps" (Ubuntu 26.04, Docker)       Terraform + Ansible
+│   └── datasets mounted via virtiofs at /srv/<name>; stacks in /opt/stacks/<name>
+├── LXC 120 "adguard"   (Ubuntu 26.04)         LAN DNS
+└── LXC 121 "wireguard" (Ubuntu 26.04)         VPN for admin access
+```
+
+- **Public access**: Cloudflare Tunnel (`cloudflared` stack, host network). Admin UIs are never routed through it.
+- **LAN names**: AdGuard DNS rewrites → Nginx Proxy Manager on the apps VM.
+- **Admin access from outside**: WireGuard.
+- **Monitoring**: Uptime Kuma (port 3001 on the apps VM).
+- Guest disks live on `tank`, never on the boot SSD. Infra uses the router as DNS, so it does not depend on AdGuard.
+
+| Tool | Responsibility |
+| --- | --- |
+| Terraform (`terraform/proxmox`) | Ubuntu images (pinned + checksum), VM/LXCs, virtiofs directory mappings, cloud-init bootstrap |
+| Ansible (`homelab.yml`) | Proxmox host packages, ZFS datasets, sanoid, Docker, stacks, AdGuard, WireGuard |
+| SOPS + age (`secrets/`, `terraform/proxmox/secrets.sops.env`) | All secrets, encrypted in git; the age key only lives on the admin PC |
+
+## Day-to-day
+
+Run from WSL/Linux in the repo root (needs `~/.config/sops/age/keys.txt`):
+
+```bash
+make tf-plan && make tf-apply   # VMs / LXCs
+make homelab-check              # Ansible dry run
+make homelab                    # apply everything
+ANSIBLE_CONFIG=ansible.cfg ansible-playbook -i inventories/homelab homelab.yml --tags apps   # only the apps VM
+make homelab-lint               # before committing
+```
+
+- Edit secrets: `sops secrets/homelab.sops.yml`.
+- Upgrade a service: bump the pinned tag in `stacks/<name>/compose.yml`, read the release notes, run `--tags apps`.
+  Nextcloud: one major version at a time. Immich: check the release notes for DB changes.
+- `ansible.cfg` is ignored in world-writable dirs such as `/mnt/c/...`; always set `ANSIBLE_CONFIG=ansible.cfg` (the Make targets do).
+
+## Snapshots and backups
+
+- sanoid snapshots (policies in `inventories/homelab/group_vars/proxmox.yml`): Immich/Nextcloud hourly 24, daily 14, weekly 8, monthly 6.
+- `@pre-rebuild-20261015` snapshots of every dataset; Immich, Nextcloud and legacy are protected with `zfs hold keep`.
+- DB dumps from the migration: `/tank/legacy/db/` (root-only). Old configs: `/tank/legacy/`.
+- **Open**: second ZFS target (syncoid) and offsite (restic) are not set up yet. Until then the only copy is the pool itself.
+
+## Rebuild from zero
+
+Assumes the `tank` pool is intact. If the boot SSD dies: reinstall Proxmox VE, then `zpool import -f tank`.
+
+1. **Admin PC** (WSL/Linux): install `ansible-core`, `ansible-lint`, `terraform`, `sops`, `age`, `make`; restore the age key to
+   `~/.config/sops/age/keys.txt` (from your password manager / offline backup, never from git).
+   `ansible-galaxy collection install -r requirements/homelab.yml`.
+2. **Proxmox host**: `pveam update`, SSH key for root, then
+   `ANSIBLE_CONFIG=ansible.cfg ansible-playbook -i inventories/homelab homelab.yml --tags proxmox`.
+3. **Terraform token** (only if the host was reinstalled): `scripts/homelab/bootstrap-secrets.sh token`.
+4. **Guests**: `make tf-plan`, review, `make tf-apply`.
+5. **Services**: `make homelab`. Stacks start on the existing data in `tank`.
+6. **Check**: Immich `http://<apps>:2283`, Nextcloud `http://<apps>:8080/status.php` (`maintenance:false`),
+   `docker ps` all healthy, `wg show` on the WireGuard LXC lists all peers, DNS answers from AdGuard.
+
+If the data itself has to be restored: roll back to a snapshot (`zfs rollback`) or import the DB dump
+(`/tank/legacy/db/*.sql.gz`) into a freshly started database container of the **same** major version.
+
+## Known quirks
+
+- Ubuntu's `wg-quick` AppArmor profile crashes wg-quick inside unprivileged LXCs; the `wireguard` role disables that one profile in LXCs.
+- In LXCs, `/etc/resolv.conf` is written by Proxmox; don't replace it.
+- Terraform only uses `<type> <key>` of `~/.ssh/id_rsa.pub`: a multi-line key comment broke cloud-init once.
+- Terraform state is local (`terraform/proxmox/terraform.tfstate`, gitignored). It can be rebuilt with `terraform import` if lost.
