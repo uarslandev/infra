@@ -56,6 +56,42 @@ make homelab-lint               # before committing
   Nextcloud: one major version at a time. Immich: check the release notes for DB changes.
 - `ansible.cfg` is ignored in world-writable dirs such as `/mnt/c/...`; always set `ANSIBLE_CONFIG=ansible.cfg` (the Make targets do).
 
+## Access
+
+- **SSH is key-only on every host** (role `ssh_access`): no password login, root only with a key. `authorized_keys`
+  is managed exclusively from `ssh_access_authorized_keys` in `inventories/homelab/group_vars/all.yml`
+  (public keys only; one per device + one offline recovery key). On Proxmox the node's own root key is always kept.
+- **Break-glass** if every device is lost (keep these in KeePass + a printed copy):
+  1. Proxmox web UI (LAN/VPN, port 8006): root password + TOTP → host shell, and a console for every VM/LXC (`pct enter <id>`).
+  2. Physical console on the server (root password).
+  3. Offline recovery SSH key (ed25519 with passphrase), never stored on a device.
+  4. The age key (`AGE-SECRET-KEY-1...`) to decrypt the secrets in this repo.
+  The apps VM holds no data: if needed, recreate it with Terraform using a new key.
+
+New device:
+
+| What | On the new device | Then |
+| --- | --- | --- |
+| SSH | `ssh-keygen -t ed25519 -C "<device>"` | add the `.pub` line to `ssh_access_authorized_keys`, run `make homelab` from a device that has access |
+| sops/age | `age-keygen -o ~/.config/sops/age/keys.txt` | add the public key to `.sops.yaml`, run `sops updatekeys <file>` for every `*.sops.*` file from an old device, commit |
+| WireGuard | the WireGuard app generates a key pair | add a `[Peer]` with its public key to `wireguard_wg0_conf` (`sops secrets/homelab.sops.yml`), run `--tags wireguard` |
+
+Remove a device: delete its key from the list / `.sops.yaml` and re-run; rotate the secrets it could read.
+
+Recovery SSH key (once, on a trusted machine): `ssh-keygen -t ed25519 -C recovery-offline -f recovery_ed25519`
+(with a passphrase), store both files in KeePass, add the `.pub` line to the list, delete the local files.
+
+## Secrets workflow
+
+All secrets live in `secrets/homelab.sops.yml`; `.env` files are never committed or written by hand. Ansible renders
+`roles/stacks/templates/<stack>.env.j2` with the decrypted values into `/opt/stacks/<stack>/.env` (root, 0600).
+
+```bash
+make secret NAME=paperless_db_password      # random value straight into sops, never printed
+sops secrets/homelab.sops.yml                # add/edit values you already have (tokens, API keys)
+sops decrypt --extract '["name"]' secrets/homelab.sops.yml   # read one value
+```
+
 ## Snapshots and backups
 
 - sanoid snapshots (policies in `inventories/homelab/group_vars/proxmox.yml`): Immich/Nextcloud hourly 24, daily 14, weekly 8, monthly 6.

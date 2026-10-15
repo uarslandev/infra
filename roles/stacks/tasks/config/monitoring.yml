@@ -62,7 +62,18 @@
   no_log: true
   register: stacks_monitoring_alertmanager_cfg
 
+# Files are pinned per revision, so only missing ones are fetched (grafana.com rejects the HEAD
+# request get_url would send in check mode).
+- name: Monitoring | Which dashboard revisions are already present
+  ansible.builtin.stat:
+    path: "{{ stacks_root }}/monitoring/config/grafana/dashboards/{{ item.name }}-r{{ item.revision }}.json"
+  loop: "{{ monitoring_dashboards }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: stacks_monitoring_dashboards_stat
+
 - name: Monitoring | Grafana dashboards (pinned revisions from grafana.com)
+  when: not (stacks_monitoring_dashboards_stat.results | selectattr('item.name', 'equalto', item.name) | first).stat.exists
   ansible.builtin.get_url:
     url: "https://grafana.com/api/dashboards/{{ item.id }}/revisions/{{ item.revision }}/download"
     dest: "{{ stacks_root }}/monitoring/config/grafana/dashboards/{{ item.name }}-r{{ item.revision }}.json"

@@ -7,7 +7,7 @@ This repo (`uarslandev/infra`, public) has two parts:
    with `ansible.cfg` (default inventory `inventory.ini`) — do not move or repurpose those files.
    Ask before changing anything in this part.
 2. **Homelab as code**: `homelab.yml`, `inventories/homelab/`, `playbooks/homelab/`, homelab roles
-   (`proxmox_host`, `zfs_datasets`, `sanoid`, `docker_host`, `stacks`, `adguard`, `wireguard`), `stacks/`, `terraform/proxmox/`,
+   (`ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`, `node_exporter`, `docker_host`, `stacks`, `adguard`, `wireguard`), `stacks/`, `terraform/proxmox/`,
    `secrets/`, `scripts/homelab/`, `docs/homelab/`. Only run explicitly. Start with `docs/homelab/README.md`.
 
 ## Rules
@@ -24,6 +24,8 @@ This repo (`uarslandev/infra`, public) has two parts:
 - **Small, reviewable steps.** Plan first, one logical change per commit, explain each step in plain language.
 - **Ask before adding new tools** (CLIs, providers, collections, services) or changing the dev-env part.
 - **Pin versions** (container images, Terraform providers, Ansible collections). No `:latest`.
+- SSH is key-only everywhere (role `ssh_access`). Never remove the last key or the Proxmox node key; test changes with an
+  open safety session (`ssh -o ControlMaster=yes -o ControlPersist=20m -fN ...`) before reloading sshd.
 - Before committing homelab changes: `make homelab-lint` (syntax, ansible-lint production, terraform fmt/validate, secrets encrypted).
 
 ## Gotchas
