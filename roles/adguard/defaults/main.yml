@@ -1,3 +1,4 @@
 ---
 adguard_version: v0.107.78
 adguard_sha256: 2070f644644be8299232f4a7bff857036fb1423563c1bf8c787e07aaf4f88278
+adguard_dns_rewrites: []

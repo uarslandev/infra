@@ -4,6 +4,11 @@ name: jellyfin
 services:
   jellyfin:
     image: jellyfin/jellyfin:10.11.11
+    networks: [default, proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.media.rule: Host(`media.${LOCAL_DOMAIN}`)
+      traefik.http.services.media.loadbalancer.server.port: "8096"
     container_name: jellyfin
     user: "1000:1000"
     ports:
@@ -18,3 +23,8 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+
+networks:
+  default:
+  proxy:
+    external: true

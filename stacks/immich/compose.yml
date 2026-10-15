@@ -6,6 +6,11 @@ services:
   immich-server:
     container_name: immich_server
     image: ghcr.io/immich-app/immich-server:v3.1.0
+    networks: [default, proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.photos.rule: Host(`photos.${LOCAL_DOMAIN}`)
+      traefik.http.services.photos.loadbalancer.server.port: "2283"
     volumes:
       - /srv/immich/library:/data
       - /etc/localtime:/etc/localtime:ro
@@ -55,3 +60,8 @@ services:
 
 volumes:
   model-cache:
+
+networks:
+  default:
+  proxy:
+    external: true

@@ -1,0 +1,59 @@
+# {{ ansible_managed }}
+# Non-Docker targets, shared middlewares and redirects from the legacy *.home names.
+http:
+  middlewares:
+    lan-only:
+      ipAllowList:
+        sourceRange:
+{% for net in homelab_admin_networks %}
+          - {{ net }}
+{% endfor %}
+    secure-headers:
+      headers:
+        stsSeconds: 31536000
+        contentTypeNosniff: true
+        referrerPolicy: strict-origin-when-cross-origin
+        frameDeny: false # Nextcloud/Proxmox use frames internally
+    to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    redirect-legacy-home:
+      redirectRegex:
+        regex: '^https?://([a-z0-9-]+)\.home(/.*)?$'
+        replacement: 'https://${1}.{{ homelab_local_domain }}${2}'
+        permanent: true
+
+  routers:
+{% for r in traefik_external_routes %}
+    {{ r.name }}:
+      rule: Host(`{{ r.name }}.{{ homelab_local_domain }}`)
+      entryPoints: [websecure]
+      service: {{ r.name }}
+      middlewares: [lan-only]
+{% endfor %}
+    legacy-home:
+      rule: HostRegexp(`^[a-z0-9-]+\.home$`)
+      entryPoints: [web]
+      service: noop@internal
+      middlewares: [redirect-legacy-home]
+    http-to-https:
+      rule: HostRegexp(`^.+\.{{ homelab_local_domain | regex_escape }}$`)
+      entryPoints: [web]
+      service: noop@internal
+      middlewares: [to-https]
+
+  services:
+{% for r in traefik_external_routes %}
+    {{ r.name }}:
+      loadBalancer:
+        servers:
+          - url: "{{ r.url }}"
+{% if r.insecure_tls | default(false) %}
+        serversTransport: insecure-tls
+{% endif %}
+{% endfor %}
+
+  serversTransports:
+    insecure-tls:
+      insecureSkipVerify: true # self-signed backend certs on the LAN (Proxmox)

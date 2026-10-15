@@ -10,7 +10,7 @@ docker_host_virtiofs_mounts:
 # Stacks deployed from stacks/<name>/compose.yml, in this order.
 stacks_enabled:
   - cloudflared
-  - npm
+  - traefik
   - immich
   - nextcloud
   - jellyfin
@@ -21,6 +21,7 @@ stacks_enabled:
 # Stacks to stop and remove (data on ZFS is kept).
 stacks_absent:
   - uptime-kuma
+  - npm
 
 stacks_root: /opt/stacks
 
@@ -43,3 +44,8 @@ monitoring_dashboards:
 # Alert e-mails via Gmail SMTP (app password). Credentials: alert_smtp_username,
 # alert_smtp_password, alert_email_to in secrets/homelab.sops.yml.
 alert_smtp_smarthost: smtp.gmail.com:587
+
+# Traefik routes to non-Docker services (https://<name>.<homelab_local_domain>, LAN/VPN only).
+traefik_external_routes:
+  - { name: proxmox, url: "https://192.168.0.123:8006", insecure_tls: true }
+  - { name: adguard, url: "http://192.168.0.162:80" }

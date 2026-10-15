@@ -58,3 +58,26 @@
     name: AdGuardHome
     enabled: true
     state: started
+
+# DNS rewrites are managed as code (the rest of the config stays editable in the web UI).
+- name: AdGuard | YAML library for the rewrite helper
+  ansible.builtin.apt:
+    name: python3-yaml
+    state: present
+
+- name: AdGuard | Rewrite helper
+  ansible.builtin.copy:
+    src: set-rewrites.py
+    dest: /usr/local/sbin/adguard-set-rewrites
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: AdGuard | DNS rewrites
+  ansible.builtin.command:
+    argv:
+      - /usr/local/sbin/adguard-set-rewrites
+      - "{{ adguard_dns_rewrites | to_json }}"
+  register: adguard_rewrites_result
+  changed_when: adguard_rewrites_result.stdout == 'changed'
+  when: adguard_dns_rewrites | length > 0 # an empty list would wipe every rewrite

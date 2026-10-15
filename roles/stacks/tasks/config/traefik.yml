@@ -1,0 +1,40 @@
+---
+# Config for stacks/traefik. Dynamic config is hot-reloaded by Traefik (file provider watch),
+# so only the data dir/acme.json changes recreate the stack.
+- name: Traefik | Data directory
+  ansible.builtin.file:
+    path: /srv/appdata/traefik
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Traefik | ACME storage (must be 0600)
+  ansible.builtin.copy:
+    content: ""
+    dest: /srv/appdata/traefik/acme.json
+    owner: root
+    group: root
+    mode: "0600"
+    force: false
+  register: stacks_traefik_acme
+
+- name: Traefik | Dynamic config directory
+  ansible.builtin.file:
+    path: "{{ stacks_root }}/traefik/config/dynamic"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Traefik | Dynamic config (routes, middlewares)
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/stacks/traefik/config/dynamic/homelab.yml.j2"
+    dest: "{{ stacks_root }}/traefik/config/dynamic/homelab.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Traefik | Recreate stack if storage was just created
+  ansible.builtin.set_fact:
+    stacks_config_changed: "{{ stacks_config_changed | bool or stacks_traefik_acme is changed }}"

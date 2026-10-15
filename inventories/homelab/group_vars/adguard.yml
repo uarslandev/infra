@@ -1,0 +1,10 @@
+---
+# DNS rewrites (exact list; anything else is removed). Local services: one wildcard to the apps VM (Traefik).
+# The legacy *.home names stay for a while: Traefik redirects them to https://<name>.<homelab_local_domain>.
+adguard_dns_rewrites:
+  - { domain: "*.{{ homelab_local_domain }}", answer: "{{ homelab_apps_ip }}" }
+  - { domain: photos.home, answer: "{{ homelab_apps_ip }}" }
+  - { domain: cloud.home, answer: "{{ homelab_apps_ip }}" }
+  - { domain: media.home, answer: "{{ homelab_apps_ip }}" }
+  - { domain: proxmox.home, answer: 192.168.0.123 }
+  - { domain: adguard.home, answer: 192.168.0.162 }

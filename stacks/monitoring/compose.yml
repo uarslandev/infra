@@ -5,6 +5,7 @@ name: monitoring
 
 services:
   prometheus:
+    networks: [default, proxy] # proxy: scrape Traefik metrics
     image: prom/prometheus:v3.15.0
     container_name: prometheus
     command:
@@ -37,6 +38,12 @@ services:
 
   grafana:
     image: grafana/grafana:13.2.4
+    networks: [default, proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.grafana.rule: Host(`grafana.${LOCAL_DOMAIN}`)
+      traefik.http.services.grafana.loadbalancer.server.port: "3000"
+      traefik.http.routers.grafana.middlewares: lan-only@file
     container_name: grafana
     env_file: .env
     environment:
@@ -85,3 +92,8 @@ services:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
+
+networks:
+  default:
+  proxy:
+    external: true

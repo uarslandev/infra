@@ -42,7 +42,7 @@ EOF
 cat > "roles/stacks/templates/${name}.env.j2" <<'EOF'
 # {{ ansible_managed }}
 TZ={{ homelab_timezone }}
-LOCAL_DOMAIN={{ local_domain }}
+LOCAL_DOMAIN={{ homelab_local_domain }}
 # Secrets: add them with `sops secrets/homelab.sops.yml`, then reference them here, e.g.
 # APP_SECRET={{ myapp_secret }}
 EOF

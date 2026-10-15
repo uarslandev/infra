@@ -79,3 +79,7 @@ scrape_configs:
       - target_label: __address__
         replacement: pve-exporter:9221
 {% endif %}
+
+  - job_name: traefik
+    static_configs:
+      - targets: ["traefik:8082"]

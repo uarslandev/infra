@@ -1,0 +1,48 @@
+---
+# Nextcloud behind Traefik: accept the local name, trust the proxy network, generate https links.
+# Runs only when the app container already exists (first install happens through the web installer).
+- name: Nextcloud | Is the app container running
+  ansible.builtin.command: docker inspect -f '{{ "{{" }}.State.Running{{ "}}" }}' nextcloud-app-1
+  register: stacks_nextcloud_running
+  changed_when: false
+  failed_when: false
+
+- name: Nextcloud | Proxy settings
+  when: stacks_nextcloud_running.stdout == 'true'
+  block:
+    - name: Nextcloud | Subnet of the proxy network
+      ansible.builtin.command: docker network inspect proxy -f '{{ "{{" }}(index .IPAM.Config 0).Subnet{{ "}}" }}'
+      register: stacks_nextcloud_proxy_subnet
+      changed_when: false
+
+    - name: Nextcloud | Current system config
+      ansible.builtin.command: docker exec -u www-data nextcloud-app-1 php occ config:list system --output=json
+      register: stacks_nextcloud_config
+      changed_when: false
+      no_log: true # contains DB password and secrets
+
+    - name: Nextcloud | Parse relevant keys
+      ansible.builtin.set_fact:
+        stacks_nextcloud_domains: "{{ (stacks_nextcloud_config.stdout | from_json).system.trusted_domains | default([]) }}"
+        stacks_nextcloud_proxies: "{{ (stacks_nextcloud_config.stdout | from_json).system.trusted_proxies | default([]) }}"
+        stacks_nextcloud_protocol: "{{ (stacks_nextcloud_config.stdout | from_json).system.overwriteprotocol | default('') }}"
+      no_log: true
+
+    - name: Nextcloud | Add local name to trusted_domains
+      ansible.builtin.command: >-
+        docker exec -u www-data nextcloud-app-1 php occ config:system:set trusted_domains
+        {{ stacks_nextcloud_domains | length }} --value=cloud.{{ homelab_local_domain }}
+      when: ("cloud." ~ homelab_local_domain) not in stacks_nextcloud_domains
+      changed_when: true
+
+    - name: Nextcloud | Trust Traefik (proxy network)
+      ansible.builtin.command: >-
+        docker exec -u www-data nextcloud-app-1 php occ config:system:set trusted_proxies
+        {{ stacks_nextcloud_proxies | length }} --value={{ stacks_nextcloud_proxy_subnet.stdout }}
+      when: stacks_nextcloud_proxy_subnet.stdout not in stacks_nextcloud_proxies
+      changed_when: true
+
+    - name: Nextcloud | Generate https links
+      ansible.builtin.command: docker exec -u www-data nextcloud-app-1 php occ config:system:set overwriteprotocol --value=https
+      when: stacks_nextcloud_protocol != 'https'
+      changed_when: true

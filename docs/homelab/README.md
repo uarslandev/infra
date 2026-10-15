@@ -9,7 +9,7 @@ Proxmox VE (boot SSD: OS only)
 ├── ZFS pool "tank" (2 × 2 TB mirror)  ← the only thing that holds data
 │   ├── tank/immich      Immich library + Postgres        (critical)
 │   ├── tank/nextcloud   Nextcloud html, data, MariaDB    (critical)
-│   ├── tank/appdata     small app state: NPM, TeamSpeak, Uptime Kuma
+│   ├── tank/appdata     small app state: Traefik (ACME), Prometheus, Grafana, TeamSpeak
 │   ├── tank/jellyfin    media, config, cache
 │   ├── tank/syncthing   config + data
 │   └── tank/apex        reserved for the APEX sync server
@@ -20,7 +20,10 @@ Proxmox VE (boot SSD: OS only)
 ```
 
 - **Public access**: Cloudflare Tunnel (`cloudflared` stack, host network). Admin UIs are never routed through it.
-- **LAN names**: AdGuard DNS rewrites → Nginx Proxy Manager on the apps VM.
+- **LAN names**: `https://<name>.home.<domain>` (photos, cloud, media, grafana, syncthing, proxmox, adguard, traefik).
+  AdGuard resolves `*.home.<domain>` to the apps VM (rewrites managed in `inventories/homelab/group_vars/adguard.yml`);
+  Traefik terminates TLS with a Let's Encrypt wildcard cert (DNS-01 via Cloudflare) and routes by Docker labels.
+  Admin UIs are LAN/VPN only (`lan-only` middleware). Old `*.home` names redirect to the new ones.
 - **Admin access from outside**: WireGuard.
 - **Monitoring**: Prometheus + Alertmanager + Grafana (`stacks/monitoring`, Grafana on port 3000 of the apps VM,
   user `admin`, password: `sops decrypt --extract '["grafana_admin_password"]' secrets/homelab.sops.yml`).

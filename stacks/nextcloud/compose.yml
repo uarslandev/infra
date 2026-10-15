@@ -28,6 +28,11 @@ services:
 
   app:
     image: nextcloud:34.0.2-apache
+    networks: [default, proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.cloud.rule: Host(`cloud.${LOCAL_DOMAIN}`)
+      traefik.http.services.cloud.loadbalancer.server.port: "80"
     ports:
       - "8080:80"
     depends_on:
@@ -55,3 +60,8 @@ services:
       - /srv/nextcloud/html:/var/www/html
       - /srv/nextcloud/data:/var/www/html/data
     restart: unless-stopped
+
+networks:
+  default:
+  proxy:
+    external: true

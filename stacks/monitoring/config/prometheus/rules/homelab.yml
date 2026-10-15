@@ -57,3 +57,10 @@ groups:
         labels: { severity: warning }
         annotations:
           summary: "Clock on {{ $labels.host }} is off by more than 1s"
+
+      - alert: CertificateExpiresSoon
+        expr: (traefik_tls_certs_not_after - time()) / 86400 < 14
+        for: 1h
+        labels: { severity: warning }
+        annotations:
+          summary: "TLS certificate for {{ $labels.cn }} expires in {{ $value | humanize }} days (renewal failing?)"

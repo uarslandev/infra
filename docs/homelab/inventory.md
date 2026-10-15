@@ -29,12 +29,12 @@ What existed before the rebuild is summarised under "Removed in the rebuild" bel
 | jellyfin | 10.11.11 (CPU transcoding) | `tank/jellyfin` |
 | syncthing | 2.1.3 | `tank/syncthing` |
 | teamspeak | 3.13.7 | `tank/appdata/teamspeak` |
-| npm | 2.15.1 | `tank/appdata/npm` |
+| traefik | v3.7.14 + docker-socket-proxy v0.5.0 | `tank/appdata/traefik` (ACME cert) |
 | monitoring | Prometheus 3.15.0, Alertmanager 0.34.1, Grafana 13.2.4, cAdvisor, blackbox, pve-exporter | `tank/appdata/{prometheus,alertmanager,grafana}` |
 | cloudflared | 2026.8.3 | none (token in SOPS) |
 
 ## Removed in the rebuild
 
-servarr (Fedora VM), pterodactyl VM, nas-share, nginxproxymanager, the old adguard and wireguard LXCs (Debian),
+servarr (Fedora VM), pterodactyl VM, nas-share, nginxproxymanager (LXC, then briefly a stack; replaced by Traefik), the old adguard and wireguard LXCs (Debian),
 Dockge, Forge, GPU passthrough (Quadro K420 too old for current drivers), 7,279 legacy snapshots.
 Unused datasets kept for now: `tank/firefly_iii`, `tank/forge`; `/tank/docker-backup` and `/tank/dockge` in the pool root.

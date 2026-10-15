@@ -4,6 +4,12 @@ name: syncthing
 services:
   syncthing:
     image: lscr.io/linuxserver/syncthing:v2.1.3-ls227
+    networks: [default, proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.syncthing.rule: Host(`syncthing.${LOCAL_DOMAIN}`)
+      traefik.http.services.syncthing.loadbalancer.server.port: "8384"
+      traefik.http.routers.syncthing.middlewares: lan-only@file
     container_name: syncthing
     hostname: syncthing
     environment:
@@ -19,3 +25,8 @@ services:
       - "22000:22000/udp"
       - "21027:21027/udp"
     restart: unless-stopped
+
+networks:
+  default:
+  proxy:
+    external: true

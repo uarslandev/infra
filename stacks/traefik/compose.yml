@@ -1,0 +1,72 @@
+# Traefik: LAN reverse proxy with a Let's Encrypt wildcard cert for *.${LOCAL_DOMAIN} (DNS-01 via Cloudflare).
+# Routes come from Docker labels (stacks/*/compose.yml) and ./config/dynamic (non-Docker targets).
+# Docker API access only through a read-only socket proxy.
+name: traefik
+
+services:
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    container_name: traefik-socket-proxy
+    environment:
+      CONTAINERS: "1" # read-only container listing, everything else denied
+      POST: "0"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [socket]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.7.14
+    container_name: traefik
+    depends_on: [socket-proxy]
+    env_file: .env
+    command:
+      - --log.level=INFO
+      - --ping=true
+      - --api.dashboard=true
+      - --metrics.prometheus=true
+      - --metrics.prometheus.entryPoint=metrics
+      - --entrypoints.metrics.address=:8082
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls.certresolver=le
+      - --entrypoints.websecure.http.tls.domains[0].main=${LOCAL_DOMAIN}
+      - --entrypoints.websecure.http.tls.domains[0].sans=*.${LOCAL_DOMAIN}
+      - --entrypoints.websecure.http.middlewares=secure-headers@file
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/data/acme.json
+      - --certificatesresolvers.le.acme.dnschallenge.provider=cloudflare
+      - --certificatesresolvers.le.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53
+      - --providers.docker.endpoint=tcp://socket-proxy:2375
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=proxy
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /srv/appdata/traefik:/data
+      - ./config/dynamic:/etc/traefik/dynamic:ro
+    networks: [proxy, socket]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.dashboard.rule: Host(`traefik.${LOCAL_DOMAIN}`)
+      traefik.http.routers.dashboard.service: api@internal
+      traefik.http.routers.dashboard.middlewares: lan-only@file
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+networks:
+  proxy:
+    external: true
+  socket:
+    internal: true
