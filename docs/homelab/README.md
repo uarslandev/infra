@@ -72,7 +72,7 @@ New device:
 
 | What | On the new device | Then |
 | --- | --- | --- |
-| SSH | `ssh-keygen -t ed25519 -C "<device>"` | add the `.pub` line to `ssh_access_authorized_keys`, run `make homelab` from a device that has access |
+| SSH | `ssh-keygen -t ed25519 -C "<device>"`, then `make ssh-config` | add the `.pub` line to `ssh_access_authorized_keys`, run `make homelab` from a device that has access |
 | sops/age | `age-keygen -o ~/.config/sops/age/keys.txt` | add the public key to `.sops.yaml`, run `sops updatekeys <file>` for every `*.sops.*` file from an old device, commit |
 | WireGuard | the WireGuard app generates a key pair | add a `[Peer]` with its public key to `wireguard_wg0_conf` (`sops secrets/homelab.sops.yml`), run `--tags wireguard` |
 

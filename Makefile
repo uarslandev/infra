@@ -3,7 +3,7 @@
 # ==============================================================================
 
 .DEFAULT_GOAL := help
-.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret
+.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config
 
 help:
 	@echo "Infrastructure & Dotfiles Automation"
@@ -23,6 +23,7 @@ help:
 	@echo "  make homelab-lint   Lint + validate homelab code"
 	@echo "  make new-stack NAME=app IMAGE=vendor/app:1.2.3 PORT=8080   Scaffold a new stack"
 	@echo "  make secret NAME=app_db_password [LENGTH=40]   Random secret into sops (never printed)"
+	@echo "  make ssh-config     SSH config for all homelab hosts (WSL + Windows) from the inventory"
 
 apply:
 	./bin/dotfiles
@@ -70,3 +71,6 @@ new-stack:
 
 secret:
 	scripts/homelab/new-secret.sh $(NAME) $(or $(LENGTH),40)
+
+ssh-config:
+	scripts/homelab/ssh-config.sh --windows
