@@ -26,3 +26,6 @@ proxmox_host_kernel_modules:
   - wireguard
 
 node_exporter_smart: true
+
+# authorized_keys lives in /etc/pve/priv; keep the node's own root key (needed by Proxmox itself).
+ssh_access_proxmox: true

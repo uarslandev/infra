@@ -1,3 +1,9 @@
 ---
 homelab_timezone: Europe/Berlin
 homelab_secrets_file: "{{ playbook_dir }}/secrets/homelab.sops.yml"
+
+# SSH public keys allowed on every homelab host (authorized_keys is managed exclusively).
+# One key per device, plus one offline recovery key kept only in KeePass. See docs/homelab/README.md "Access".
+ssh_access_authorized_keys:
+  - "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDceX3gOc9C4uvk4PYVw5l8FQWYVIIeEvnghWvD6UabblfWGmUXAzVObN21L9AhRHqPIbVn8tWjQMYUkNq/hGJ9Sa+cI83nM8GAleFjlpsVZCoe0A1+QeCd8uKOX3u4lf4wOg3+LqYpkYk6w+wwdpEyDUGLolwS0B+YZwcwaJ7JUA3V9NSGDpH9UsBBDlvU2/1JZaRNKbA+t/XYghVJIFtd5wn1i0F1gBx+2ZMKByRSn43o4M+Ng4FlSaFlEVVashEhVRoMoQeqC20uiZYaa7krU8lNLDxPP9T5BTBIm2VGzu57jE7HJkM/nHn6BRebD2Z3V18hH/wvqHM8DJYDgCRN881TQzt4IJTOlbdXvVu30QevmvTUP2oaCEo+KiLx0PGgGogd81mljrhW8AMWuRI2wltFiuOBqjMaxnYR3QKcly0muC7moR8e2JRzDSkQChh0OLMbdFJtZo8FoMTykreOEL80JDmP1HRjHxq65ksu+cYQHo2JXUsVhjbIB5qNvOTzIc1+edGOJBukn6yEVtjhxImHBEoBr8kbPfu8xMjCzzy7EKanSwapL8KsduyLfbZI6N0gP54MnVnBEcD2D38zYuR6hSds3hkNUy5UGFTEIlWdlAa6Zm59/m91eCNpH4VJFkCW/aZHWDjJRqrrwksKmENT09Ydciq8cmSs/lTfMQ== pc-windows-wsl"
+  # - "ssh-ed25519 AAAA... recovery-offline"   # add once generated (see docs)

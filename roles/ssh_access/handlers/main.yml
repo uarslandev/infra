@@ -1,0 +1,5 @@
+---
+# try-reload-or-restart: works with classic ssh.service and with Ubuntu's socket-activated sshd.
+- name: Reload sshd
+  ansible.builtin.command: systemctl try-reload-or-restart ssh.service # noqa: command-instead-of-module (no module equivalent)
+  changed_when: true

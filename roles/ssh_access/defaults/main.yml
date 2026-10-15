@@ -1,0 +1,5 @@
+---
+ssh_access_user: "{{ ansible_user }}"
+ssh_access_authorized_keys: []
+# Proxmox node: authorized_keys lives in /etc/pve/priv and the node key must be kept.
+ssh_access_proxmox: false

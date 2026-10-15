@@ -1,0 +1,61 @@
+---
+# Key-only SSH on every homelab host. authorized_keys is managed exclusively from the list in
+# inventories/homelab/group_vars/all.yml (one key per device + one offline recovery key).
+- name: SSH access | Refuse to run with an empty key list (would lock everyone out)
+  ansible.builtin.assert:
+    that: ssh_access_authorized_keys | length > 0
+    fail_msg: ssh_access_authorized_keys is empty
+
+- name: SSH access | Regular hosts
+  when: not ssh_access_proxmox
+  block:
+    - name: SSH access | authorized_keys for {{ ssh_access_user }}
+      ansible.posix.authorized_key:
+        user: "{{ ssh_access_user }}"
+        key: "{{ ssh_access_authorized_keys | join('\n') }}"
+        exclusive: true
+
+# Proxmox: root's authorized_keys is a symlink into the cluster filesystem (/etc/pve/priv), which
+# rejects chmod/chown, so it is written in place with cp. The node's own root key is always kept.
+- name: SSH access | Proxmox node
+  when: ssh_access_proxmox
+  block:
+    - name: SSH access | Read the node's own root public key
+      ansible.builtin.slurp:
+        src: /root/.ssh/id_rsa.pub
+      register: ssh_access_node_key
+
+    - name: SSH access | Stage authorized_keys on local disk
+      ansible.builtin.copy:
+        content: "{{ ([ssh_access_node_key.content | b64decode | trim] + ssh_access_authorized_keys) | join('\n') }}\n"
+        dest: /root/.ssh/authorized_keys.managed
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: SSH access | Compare with the live file
+      ansible.builtin.command: cmp -s /root/.ssh/authorized_keys.managed /etc/pve/priv/authorized_keys
+      register: ssh_access_cmp
+      changed_when: false
+      failed_when: ssh_access_cmp.rc not in [0, 1]
+
+    - name: SSH access | Write authorized_keys into /etc/pve/priv
+      ansible.builtin.command: cp --no-preserve=mode,ownership /root/.ssh/authorized_keys.managed /etc/pve/priv/authorized_keys
+      when: ssh_access_cmp.rc == 1
+      changed_when: true
+
+- name: SSH access | sshd hardening (key-only)
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/10-homelab-hardening.conf
+    content: |
+      # Managed by Ansible (ssh_access). Included before the main config, so these settings win.
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PermitRootLogin prohibit-password
+      PubkeyAuthentication yes
+      PermitEmptyPasswords no
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload sshd

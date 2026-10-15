@@ -10,6 +10,7 @@
   hosts: proxmox
   tags: [proxmox]
   roles:
+    - ssh_access
     - proxmox_host
     - zfs_datasets
     - sanoid
@@ -27,6 +28,7 @@
       tags: [always]
   roles:
     - common
+    - ssh_access
     - docker_host
     - node_exporter
     - stacks
@@ -40,6 +42,7 @@
         file: "{{ homelab_secrets_file }}"
       tags: [always]
   roles:
+    - ssh_access
     - adguard
     - node_exporter
 
@@ -52,5 +55,6 @@
         file: "{{ homelab_secrets_file }}"
       tags: [always]
   roles:
+    - ssh_access
     - wireguard
     - node_exporter
