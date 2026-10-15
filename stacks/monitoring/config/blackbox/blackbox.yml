@@ -1,0 +1,17 @@
+modules:
+  http_2xx:
+    prober: http
+    timeout: 10s
+    http:
+      preferred_ip_protocol: ip4
+      follow_redirects: true
+      tls_config:
+        insecure_skip_verify: true # LAN services with self-signed certs (e.g. Proxmox)
+  dns_lan:
+    prober: dns
+    timeout: 5s
+    dns:
+      preferred_ip_protocol: ip4
+      query_name: cloudflare.com
+      query_type: A
+      valid_rcodes: [NOERROR]

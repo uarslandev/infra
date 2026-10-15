@@ -1,0 +1,22 @@
+---
+# Distro-packaged Prometheus node exporter on every host (ZFS collector is built in).
+- name: Node exporter | Packages
+  ansible.builtin.apt:
+    name: "{{ ['prometheus-node-exporter'] + (['prometheus-node-exporter-collectors', 'smartmontools'] if node_exporter_smart else []) }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Node exporter | Enable service
+  ansible.builtin.systemd_service:
+    name: prometheus-node-exporter
+    enabled: true
+    state: started
+
+# SMART metrics via the textfile collector (only where real disks exist, i.e. the Proxmox host).
+- name: Node exporter | Enable SMART collector timer
+  ansible.builtin.systemd_service:
+    name: prometheus-node-exporter-smartmon.timer
+    enabled: true
+    state: started
+  when: node_exporter_smart

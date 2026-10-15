@@ -5,6 +5,8 @@
 #   scripts/homelab/bootstrap-secrets.sh          # both parts
 #   scripts/homelab/bootstrap-secrets.sh token    # only the Proxmox API token for Terraform
 #   scripts/homelab/bootstrap-secrets.sh services # only the service secrets
+#   scripts/homelab/bootstrap-secrets.sh grafana  # random Grafana admin password (only if missing)
+#   scripts/homelab/bootstrap-secrets.sh pve-exporter # read-only Proxmox token for monitoring
 set -euo pipefail
 REPO=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 PART=${1:-all}
@@ -31,7 +33,9 @@ PY
 fi
 
 # 2) Service secrets taken over from the old servarr/LXC configs
-if [[ $PART == all || $PART == services ]]; then
+if [[ $PART == all || $PART == services ]] && [[ -f $REPO/secrets/homelab.sops.yml && ${FORCE:-0} != 1 ]]; then
+  echo "secrets/homelab.sops.yml exists; not overwriting it (FORCE=1 to rebuild it from the legacy configs)"
+elif [[ $PART == all || $PART == services ]]; then
   ssh -o BatchMode=yes proxmox '
     cd /tank/dockge/stacks
     cat immich/.env;               echo "---SPLIT---"
@@ -70,4 +74,33 @@ PY
   (cd "$REPO" && sops encrypt --in-place secrets/homelab.sops.yml)
   echo "wrote secrets/homelab.sops.yml with keys:"
   grep -oE '^[a-z_]+:' "$REPO/secrets/homelab.sops.yml" | grep -v '^sops:'
+fi
+
+# Adds one key to secrets/homelab.sops.yml without printing the value.
+sops_set() {
+  (cd "$REPO" && sops set secrets/homelab.sops.yml "[\"$1\"]" "$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$2")")
+  echo "set $1 in secrets/homelab.sops.yml"
+}
+has_key() {
+  (cd "$REPO" && sops decrypt --extract "[\"$1\"]" secrets/homelab.sops.yml >/dev/null 2>&1)
+}
+
+# 3) Grafana admin password (generated, never shown; read it with:
+#    sops decrypt --extract '["grafana_admin_password"]' secrets/homelab.sops.yml)
+if [[ $PART == all || $PART == grafana ]]; then
+  if has_key grafana_admin_password; then
+    echo "grafana_admin_password already set"
+  else
+    sops_set grafana_admin_password "$(openssl rand -base64 30 | tr -d '\n/+=')"
+  fi
+fi
+
+# 4) Read-only Proxmox API token for prometheus-pve-exporter (role PVEAuditor)
+if [[ $PART == all || $PART == pve-exporter ]]; then
+  ssh -o BatchMode=yes proxmox '
+    pveum user list --output-format json | grep -q "\"pve-exporter@pve\"" || pveum user add pve-exporter@pve --comment "Prometheus exporter (read-only)"
+    pveum acl modify / --users pve-exporter@pve --roles PVEAuditor
+    pveum user token remove pve-exporter@pve monitoring >/dev/null 2>&1 || true
+    pveum user token add pve-exporter@pve monitoring --privsep 0 --output-format json' > "$TMP/pve-exporter.json"
+  sops_set pve_exporter_token_value "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["value"])' "$TMP/pve-exporter.json")"
 fi

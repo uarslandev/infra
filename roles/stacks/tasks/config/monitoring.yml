@@ -1,0 +1,92 @@
+---
+# Config for stacks/monitoring. Sets stacks_config_changed so the stack is recreated on changes.
+- name: Monitoring | Data directories (owned by the container users)
+  ansible.builtin.file:
+    path: "/srv/appdata/{{ item.name }}"
+    state: directory
+    owner: "{{ item.uid }}"
+    group: "{{ item.uid }}"
+    mode: "0750"
+  loop:
+    - { name: prometheus, uid: 65534 }
+    - { name: alertmanager, uid: 65534 }
+    - { name: grafana, uid: 472 }
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Monitoring | Config directories
+  ansible.builtin.file:
+    path: "{{ stacks_root }}/monitoring/config/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - prometheus/rules
+    - alertmanager
+    - blackbox
+    - grafana/provisioning/datasources
+    - grafana/provisioning/dashboards
+    - grafana/dashboards
+
+- name: Monitoring | Prometheus config (targets from inventory)
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/stacks/monitoring/config/prometheus/prometheus.yml.j2"
+    dest: "{{ stacks_root }}/monitoring/config/prometheus/prometheus.yml"
+    owner: root
+    group: root
+    mode: "0644"
+  register: stacks_monitoring_prometheus_cfg
+
+- name: Monitoring | Static config files
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/stacks/monitoring/config/{{ item }}"
+    dest: "{{ stacks_root }}/monitoring/config/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - prometheus/rules/homelab.yml
+    - blackbox/blackbox.yml
+    - grafana/provisioning/datasources/prometheus.yml
+    - grafana/provisioning/dashboards/homelab.yml
+  register: stacks_monitoring_static_cfg
+
+- name: Monitoring | Alertmanager config (contains the Telegram token)
+  ansible.builtin.template:
+    src: "{{ playbook_dir }}/stacks/monitoring/config/alertmanager/alertmanager.yml.j2"
+    dest: "{{ stacks_root }}/monitoring/config/alertmanager/alertmanager.yml"
+    owner: root
+    group: "65534"
+    mode: "0640"
+  no_log: true
+  register: stacks_monitoring_alertmanager_cfg
+
+- name: Monitoring | Grafana dashboards (pinned revisions from grafana.com)
+  ansible.builtin.get_url:
+    url: "https://grafana.com/api/dashboards/{{ item.id }}/revisions/{{ item.revision }}/download"
+    dest: "{{ stacks_root }}/monitoring/config/grafana/dashboards/{{ item.name }}-r{{ item.revision }}.json"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ monitoring_dashboards }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: stacks_monitoring_dashboards_dl
+
+- name: Monitoring | Point dashboards at the provisioned Prometheus datasource
+  ansible.builtin.replace:
+    path: "{{ stacks_root }}/monitoring/config/grafana/dashboards/{{ item.name }}-r{{ item.revision }}.json"
+    regexp: '\$\{DS_[A-Z0-9_]+\}'
+    replace: prometheus
+  loop: "{{ monitoring_dashboards }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: stacks_monitoring_dashboards_ds
+
+- name: Monitoring | Recreate stack if config changed
+  ansible.builtin.set_fact:
+    stacks_config_changed: >-
+      {{ stacks_monitoring_prometheus_cfg is changed or stacks_monitoring_static_cfg is changed
+         or stacks_monitoring_alertmanager_cfg is changed or stacks_monitoring_dashboards_dl is changed
+         or stacks_monitoring_dashboards_ds is changed }}

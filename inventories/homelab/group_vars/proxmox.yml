@@ -24,3 +24,5 @@ sanoid_datasets:
 
 proxmox_host_kernel_modules:
   - wireguard
+
+node_exporter_smart: true

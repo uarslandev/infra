@@ -12,3 +12,24 @@
   loop: "{{ stacks_enabled }}"
   loop_control:
     loop_var: stack
+
+- name: Stacks | Find retired stacks still deployed
+  ansible.builtin.stat:
+    path: "{{ stacks_root }}/{{ item }}/compose.yml"
+  loop: "{{ stacks_absent }}"
+  register: stacks_absent_stat
+
+- name: Stacks | Remove retired stacks (data on ZFS is kept)
+  community.docker.docker_compose_v2:
+    project_src: "{{ stacks_root }}/{{ item.item }}"
+    state: absent
+  loop: "{{ stacks_absent_stat.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.stat.exists
+
+- name: Stacks | Remove retired stack directories
+  ansible.builtin.file:
+    path: "{{ stacks_root }}/{{ item }}"
+    state: absent
+  loop: "{{ stacks_absent }}"

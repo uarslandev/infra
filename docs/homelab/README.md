@@ -22,7 +22,12 @@ Proxmox VE (boot SSD: OS only)
 - **Public access**: Cloudflare Tunnel (`cloudflared` stack, host network). Admin UIs are never routed through it.
 - **LAN names**: AdGuard DNS rewrites → Nginx Proxy Manager on the apps VM.
 - **Admin access from outside**: WireGuard.
-- **Monitoring**: Uptime Kuma (port 3001 on the apps VM).
+- **Monitoring**: Prometheus + Alertmanager + Grafana (`stacks/monitoring`, Grafana on port 3000 of the apps VM,
+  user `admin`, password: `sops decrypt --extract '["grafana_admin_password"]' secrets/homelab.sops.yml`).
+  Every host runs `prometheus-node-exporter` (ZFS + SMART on the Proxmox host); HTTP/DNS checks via blackbox;
+  Proxmox via a read-only `pve-exporter@pve` token. Alerts (rules in `stacks/monitoring/config/prometheus/rules/`)
+  go to Telegram once `telegram_bot_token` and `telegram_chat_id` are in `secrets/homelab.sops.yml`.
+- **Updates**: Renovate (`renovate.json`) opens PRs for new image/provider/collection versions; majors need approval.
 - Guest disks live on `tank`, never on the boot SSD. Infra uses the router as DNS, so it does not depend on AdGuard.
 
 | Tool | Responsibility |
@@ -44,6 +49,8 @@ make homelab-lint               # before committing
 ```
 
 - Edit secrets: `sops secrets/homelab.sops.yml`.
+- New service: `make new-stack NAME=app IMAGE=vendor/app:1.2.3 PORT=8080`, adjust the generated files, add the name to
+  `stacks_enabled`, run `--tags apps`. Retire one: move it to `stacks_absent`.
 - Upgrade a service: bump the pinned tag in `stacks/<name>/compose.yml`, read the release notes, run `--tags apps`.
   Nextcloud: one major version at a time. Immich: check the release notes for DB changes.
 - `ansible.cfg` is ignored in world-writable dirs such as `/mnt/c/...`; always set `ANSIBLE_CONFIG=ansible.cfg` (the Make targets do).

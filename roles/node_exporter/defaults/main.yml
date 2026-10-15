@@ -1,0 +1,3 @@
+---
+# Collect SMART data (needs physical disks; enable on the Proxmox host only).
+node_exporter_smart: false

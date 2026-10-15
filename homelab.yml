@@ -13,6 +13,7 @@
     - proxmox_host
     - zfs_datasets
     - sanoid
+    - node_exporter
 
 - name: Docker host
   hosts: docker_hosts
@@ -27,6 +28,7 @@
   roles:
     - common
     - docker_host
+    - node_exporter
     - stacks
 
 - name: AdGuard Home
@@ -39,6 +41,7 @@
       tags: [always]
   roles:
     - adguard
+    - node_exporter
 
 - name: WireGuard
   hosts: wireguard
@@ -50,3 +53,4 @@
       tags: [always]
   roles:
     - wireguard
+    - node_exporter

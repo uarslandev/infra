@@ -1,0 +1,59 @@
+groups:
+  - name: homelab
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.job }} target {{ $labels.instance }} is down"
+
+      - alert: ServiceProbeFailed
+        expr: probe_success == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.service }} is not responding ({{ $labels.instance }})"
+
+      - alert: ZfsPoolNotOnline
+        expr: node_zfs_zpool_state{state!="online"} > 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "ZFS pool {{ $labels.zpool }} is {{ $labels.state }} on {{ $labels.host }}"
+
+      - alert: SmartUnhealthy
+        expr: smartmon_device_smart_healthy == 0
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "SMART health failed for {{ $labels.disk }} on {{ $labels.host }}"
+
+      - alert: SmartReallocatedSectorsIncreased
+        expr: increase(smartmon_reallocated_sector_ct_raw_value[24h]) > 0
+        labels: { severity: warning }
+        annotations:
+          summary: "Reallocated sectors increased on {{ $labels.disk }} ({{ $labels.host }}); plan a replacement"
+
+      - alert: FilesystemAlmostFull
+        expr: |
+          (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs|virtiofs|fuse.*|nsfs"}
+            / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs|virtiofs|fuse.*|nsfs"}) < 0.10
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.mountpoint }} on {{ $labels.host }} has less than 10% free"
+
+      - alert: HostMemoryLow
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.10
+        for: 15m
+        labels: { severity: warning }
+        annotations:
+          summary: "{{ $labels.host }} has less than 10% memory available"
+
+      - alert: HostOutOfSync
+        expr: abs(node_timex_offset_seconds) > 1
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: "Clock on {{ $labels.host }} is off by more than 1s"

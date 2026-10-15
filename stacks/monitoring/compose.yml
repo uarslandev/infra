@@ -1,0 +1,87 @@
+# Monitoring: Prometheus + Alertmanager (Telegram) + Grafana, cAdvisor, blackbox probes, Proxmox exporter.
+# Host metrics come from prometheus-node-exporter on every host (Ansible role node_exporter).
+# Config files in ./config are rendered by Ansible (roles/stacks/tasks/config/monitoring.yml).
+name: monitoring
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.15.0
+    container_name: prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+    volumes:
+      - ./config/prometheus:/etc/prometheus:ro
+      - /srv/appdata/prometheus:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    container_name: alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    volumes:
+      - ./config/alertmanager:/etc/alertmanager:ro
+      - /srv/appdata/alertmanager:/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    container_name: grafana
+    env_file: .env
+    environment:
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    volumes:
+      - /srv/appdata/grafana:/var/lib/grafana
+      - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./config/grafana/dashboards:/var/lib/grafana-dashboards:ro
+    ports:
+      - "3000:3000"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.6
+    container_name: cadvisor
+    privileged: true # required to read cgroup/container stats
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: unless-stopped
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.29.0
+    container_name: blackbox
+    command: --config.file=/etc/blackbox/blackbox.yml
+    volumes:
+      - ./config/blackbox:/etc/blackbox:ro
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  pve-exporter:
+    image: prompve/prometheus-pve-exporter:3.10.1
+    container_name: pve-exporter
+    profiles: [pve] # enabled via COMPOSE_PROFILES in .env once the read-only PVE token exists
+    env_file: .env
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

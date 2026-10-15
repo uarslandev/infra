@@ -23,6 +23,18 @@
     group: root
     mode: "0600"
   no_log: true
+  register: stacks_env
+
+- name: "Stacks | Reset config change flag for {{ stack }}"
+  ansible.builtin.set_fact:
+    stacks_config_changed: "{{ stacks_env is changed }}"
+
+# Optional stack-specific config (roles/stacks/tasks/config/<stack>.yml), e.g. rendered config files.
+- name: "Stacks | Extra config for {{ stack }}"
+  ansible.builtin.include_tasks: "{{ stacks_config_tasks }}"
+  loop: "{{ query('ansible.builtin.first_found', {'files': ['config/' + stack + '.yml'], 'paths': [role_path + '/tasks'], 'skip': true}) }}"
+  loop_control:
+    loop_var: stacks_config_tasks
 
 - name: "Stacks | Up {{ stack }}"
   community.docker.docker_compose_v2:
@@ -30,3 +42,4 @@
     state: present
     pull: missing
     remove_orphans: true
+    recreate: "{{ 'always' if stacks_config_changed | bool else 'auto' }}"

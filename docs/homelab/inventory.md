@@ -30,7 +30,7 @@ What existed before the rebuild is summarised under "Removed in the rebuild" bel
 | syncthing | 2.1.3 | `tank/syncthing` |
 | teamspeak | 3.13.7 | `tank/appdata/teamspeak` |
 | npm | 2.15.1 | `tank/appdata/npm` |
-| uptime-kuma | 2.5.6 | `tank/appdata/uptime-kuma` |
+| monitoring | Prometheus 3.15.0, Alertmanager 0.34.1, Grafana 13.2.4, cAdvisor, blackbox, pve-exporter | `tank/appdata/{prometheus,alertmanager,grafana}` |
 | cloudflared | 2026.8.3 | none (token in SOPS) |
 
 ## Removed in the rebuild
