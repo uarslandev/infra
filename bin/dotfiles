@@ -3,7 +3,7 @@
 # Dotfiles & System Automation Bootstrap CLI
 # Compatible with Arch Linux, WSL, Fedora VM, Ubuntu, and Debian
 # Can be run directly via curl or cloned locally:
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/ansible/main/bin/dotfiles)"
+#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bin/dotfiles)"
 # ==============================================================================
 set -euo pipefail
 
@@ -17,7 +17,7 @@ YELLOW='\033[38;2;249;226;175m'
 RED='\033[38;2;243;139;168m'
 MAUVE='\033[38;2;203;166;247m'
 
-DEFAULT_REPO_URL="https://github.com/uarslandev/ansible.git"
+DEFAULT_REPO_URL="https://github.com/uarslandev/infra.git"
 REPO_URL="${DOTFILES_REPO_URL:-$DEFAULT_REPO_URL}"
 TARGET_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 

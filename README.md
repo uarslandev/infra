@@ -1,6 +1,9 @@
-# Dotfiles & Multi-OS Infrastructure Automation
+# infra: Dotfiles, Dev Environments & Homelab as Code
 
-A production-grade, multi-distribution automation repository designed to provision, bootstrap, and maintain development environments and dotfiles across **Arch Linux**, **WSL (Windows Subsystem for Linux)**, **Fedora VMs**, and **Ubuntu / Debian**.
+Two parts in one repo:
+
+- **Dev environment / dotfiles** for **Arch Linux**, **WSL**, **Fedora** and **Ubuntu / Debian** (one-command bootstrap below).
+- **Homelab as code**: Proxmox VMs/LXCs with **Terraform**, configuration and Docker stacks with **Ansible**, secrets with **SOPS + age**. See [docs/homelab/README.md](docs/homelab/README.md).
 
 ---
 
@@ -9,14 +12,14 @@ A production-grade, multi-distribution automation repository designed to provisi
 Run this single command in a terminal on **any fresh system** (Arch, WSL, Fedora VM, or Ubuntu):
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/ansible/main/bin/dotfiles)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bin/dotfiles)"
 ```
 
 ### What this command does automatically:
 1. **Detects the OS & Environment**: Identifies Arch Linux, WSL, Fedora, or Ubuntu/Debian.
 2. **Bootstraps Prerequisites**: Automatically installs `ansible`, `git`, `python3`, and `chezmoi` via the native package manager (`pacman`, `dnf`, or `apt`).
 3. **Clones Repository**: Clones this configuration repository to `~/.dotfiles`.
-4. **Installs Galaxy Requirements**: Pulls required Ansible collections (`community.general`, `kubernetes.core`).
+4. **Installs Galaxy Requirements**: Pulls required Ansible collections (`community.general`).
 5. **Applies Dotfiles & Tools**: Executes [`main.yml`](file:///home/user/ansible/main.yml) on localhost to install developer packages and apply your dotfiles from [`uarslandev/dotfiles.git`](https://github.com/uarslandev/dotfiles.git).
 6. **Exposes the `dotfiles` CLI**: Symlinks `dotfiles` to `~/.local/bin/dotfiles` so you can update and re-sync your environment anytime by simply running `dotfiles`.
 
@@ -28,7 +31,7 @@ If you prefer to clone the repository manually before running:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/uarslandev/ansible.git ~/.dotfiles
+git clone https://github.com/uarslandev/infra.git ~/.dotfiles
 cd ~/.dotfiles
 
 # 2. Run the bootstrap runner
@@ -63,14 +66,14 @@ cd ~/.dotfiles
 │   ├── whoami.yml               # Resolves target non-root user and home directory
 │   └── whoami_wsl.yml           # Resolves Windows host user in WSL
 ├── requirements/
-│   └── common.yml               # Ansible Galaxy collections (community.general, kubernetes.core)
+│   ├── common.yml               # Galaxy collections for the dev env (community.general)
+│   └── homelab.yml              # Pinned collections for homelab.yml
 ├── main.yml                     # Universal entrypoint (runs pre_tasks + dynamic roles on localhost)
 ├── ansible.cfg                  # Non-blocking configuration (become_ask_pass = False)
-├── inventory.ini                # Inventory (localhost, workstations, wsl, vms, servers)
+├── inventory.ini                # Dev inventory (localhost, workstations, wsl, vms)
 ├── group_vars/
 │   ├── all.yml                  # Global pipeline, role exclude filters, and Ubuntu/Fedora packages
-│   ├── workstations.yml         # Arch Linux package definitions (pkgSync compatible)
-│   └── servers.yml              # Server node variables
+│   └── workstations.yml         # Arch Linux package definitions (pkgSync compatible)
 ├── host_vars/
 │   ├── pc.yml                   # Machine-specific packages (e.g. NVIDIA drivers)
 │   └── thinkpad.yml             # Machine-specific packages (e.g. ZFS tools)
@@ -86,6 +89,19 @@ cd ~/.dotfiles
     │   └── tasks/Fedora.yml     # Dnf packages (starship, fastfetch, chezmoi native)
     ├── devops_tools/            # Docker group & devops CLI tools (kubectl, helm, k9s, kind, terraform)
     └── dotfiles/                # Auto-installs chezmoi on any OS and applies dotfiles repo
+```
+
+Homelab (only run explicitly, never by the bootstrap):
+
+```
+├── homelab.yml                  # Proxmox host, apps VM (Docker + stacks), AdGuard, WireGuard
+├── inventories/homelab/         # Homelab inventory + group_vars
+├── playbooks/homelab/           # One-off playbooks (e.g. legacy data migration)
+├── roles/                       # proxmox_host, zfs_datasets, sanoid, docker_host, stacks, adguard, wireguard
+├── stacks/<service>/compose.yml # Docker Compose stacks with pinned image versions
+├── terraform/proxmox/           # bpg/proxmox: Ubuntu cloud image, apps VM, LXCs, virtiofs shares
+├── secrets/*.sops.yml           # SOPS + age encrypted secrets (key never in git)
+└── docs/homelab/                # Architecture, inventory, rebuild-from-zero runbook
 ```
 
 ---

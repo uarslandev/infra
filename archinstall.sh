@@ -268,7 +268,7 @@ echo "$USERNAME:$USER_PASS" | chpasswd
 echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/10-wheel && chmod 0440 /etc/sudoers.d/10-wheel
 
 if [[ ! -f "/home/$USERNAME/ansible/site.yml" ]]; then
-    git clone https://github.com/uarslandev/ansible.git "/home/$USERNAME/ansible"
+    git clone https://github.com/uarslandev/infra.git "/home/$USERNAME/ansible"
 fi
 chown -R "$USERNAME:$USERNAME" "/home/$USERNAME"
 
