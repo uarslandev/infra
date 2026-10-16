@@ -28,7 +28,6 @@ What existed before the rebuild is summarised under "Removed in the rebuild" bel
 | nextcloud | 34.0.2, MariaDB 12.3.2, Redis 8.10.0, cron container | `tank/nextcloud` (109 GB) |
 | jellyfin | 10.11.11 (CPU transcoding) | `tank/jellyfin` |
 | syncthing | 2.1.3 | `tank/syncthing` |
-| teamspeak | 3.13.7 | `tank/appdata/teamspeak` |
 | traefik | v3.7.14 + docker-socket-proxy v0.5.0 | `tank/appdata/traefik` (ACME cert) |
 | monitoring | Prometheus 3.15.0, Alertmanager 0.34.1, Grafana 13.2.4, cAdvisor, blackbox, pve-exporter | `tank/appdata/{prometheus,alertmanager,grafana}` |
 | cloudflared | 2026.8.3 | none (token in SOPS) |
@@ -37,4 +36,5 @@ What existed before the rebuild is summarised under "Removed in the rebuild" bel
 
 servarr (Fedora VM), pterodactyl VM, nas-share, nginxproxymanager (LXC, then briefly a stack; replaced by Traefik), the old adguard and wireguard LXCs (Debian),
 Dockge, Forge, GPU passthrough (Quadro K420 too old for current drivers), 7,279 legacy snapshots.
-Unused datasets kept for now: `tank/firefly_iii`, `tank/forge`; `/tank/docker-backup` and `/tank/dockge` in the pool root.
+Cleaned up on 2026-10-16: TeamSpeak, Forge (`tank/forge`), Firefly III (`tank/firefly_iii`), `/tank/docker-backup`,
+`/tank/dockge`, `/tank/config`, old ISOs/templates. Kept: `tank/legacy` (pre-rebuild DB dumps, held) until backups exist.

@@ -69,7 +69,6 @@ jobs:
           ANSIBLE_CONFIG: ansible.cfg
         run: |
           ansible-playbook -i inventories/homelab homelab.yml --syntax-check
-          ansible-playbook -i inventories/homelab playbooks/homelab/migrate-legacy.yml --syntax-check
           ansible-lint --profile production homelab.yml playbooks/homelab
 
       - name: Set up Terraform

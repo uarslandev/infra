@@ -15,13 +15,13 @@ stacks_enabled:
   - nextcloud
   - jellyfin
   - syncthing
-  - teamspeak
   - monitoring
 
 # Stacks to stop and remove (data on ZFS is kept).
 stacks_absent:
   - uptime-kuma
   - npm
+  - teamspeak
 
 stacks_root: /opt/stacks
 

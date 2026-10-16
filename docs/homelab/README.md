@@ -11,7 +11,7 @@ Proxmox VE (boot SSD: OS only)
 ├── ZFS pool "tank" (2 × 2 TB mirror)  ← the only thing that holds data
 │   ├── tank/immich      Immich library + Postgres        (critical)
 │   ├── tank/nextcloud   Nextcloud html, data, MariaDB    (critical)
-│   ├── tank/appdata     small app state: Traefik (ACME), Prometheus, Grafana, TeamSpeak
+│   ├── tank/appdata     small app state: Traefik (ACME), Prometheus, Alertmanager, Grafana
 │   ├── tank/jellyfin    media, config, cache
 │   ├── tank/syncthing   config + data
 │   └── tank/apex        reserved for the APEX sync server
