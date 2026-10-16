@@ -31,7 +31,7 @@ monitoring_http_probes:
   - { name: nextcloud, url: "http://192.168.0.85:8080/status.php" }
   - { name: jellyfin, url: "http://192.168.0.85:8096/health" }
   - { name: syncthing, url: "http://192.168.0.85:8384/rest/noauth/health" }
-  - { name: grafana, url: "http://192.168.0.85:3000/api/health" }
+  - { name: grafana, url: "http://grafana:3000/api/health" } # internal: no host port
   - { name: proxmox, url: "https://192.168.0.123:8006/" }
 
 # Grafana dashboards from grafana.com (id + pinned revision).

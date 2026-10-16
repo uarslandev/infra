@@ -54,8 +54,7 @@ services:
       - /srv/appdata/grafana:/var/lib/grafana
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./config/grafana/dashboards:/var/lib/grafana-dashboards:ro
-    ports:
-      - "3000:3000"
+    # no host port: reachable only via Traefik (https://grafana.<local domain>, LAN/VPN)
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
