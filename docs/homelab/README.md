@@ -2,7 +2,7 @@
 
 Proxmox VE host with a ZFS mirror (`tank`). Everything except the data on `tank` can be rebuilt from this repo.
 
-Open work: [TODO.md](TODO.md).
+How it works: [OVERVIEW.md](OVERVIEW.md). Open work: [TODO.md](TODO.md).
 
 ## Architecture
 
