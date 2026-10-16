@@ -96,7 +96,6 @@ Homelab (only run explicitly, never by the bootstrap):
 ```
 ├── homelab.yml                  # Proxmox host, apps VM (Docker + stacks), AdGuard, WireGuard
 ├── inventories/homelab/         # Homelab inventory + group_vars
-├── playbooks/homelab/           # One-off playbooks (e.g. legacy data migration)
 ├── roles/                       # ssh_access, proxmox_host, zfs_datasets, sanoid, node_exporter, docker_host, stacks, adguard, wireguard
 ├── stacks/<service>/compose.yml # Docker Compose stacks with pinned image versions
 ├── terraform/proxmox/           # bpg/proxmox: Ubuntu cloud image, apps VM, LXCs, virtiofs shares
