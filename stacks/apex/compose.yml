@@ -1,0 +1,41 @@
+# APEX sync server (PocketBase). The image is built on this host from a pinned commit of the private
+# uarslandev/apex repo (cloned to ./src by roles/stacks/tasks/config/apex.yml; the Dockerfile pins and
+# checksums PocketBase). Data: ZFS tank/apex (virtiofs -> /srv/apex).
+# Public: only ^/api/ through the Cloudflare Tunnel (terraform/cloudflare). The admin UI /_/ is LAN/VPN
+# only via Traefik, or an SSH tunnel to 127.0.0.1:8090. Never publish 8090 on all interfaces.
+name: apex
+
+services:
+  pocketbase:
+    build: ./src/server
+    image: apex-pocketbase:${APEX_VERSION}
+    pull_policy: never # local image only, built from ./src
+    container_name: apex-pocketbase
+    user: "${APEX_UID}:${APEX_UID}"
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - /srv/apex/pb_data:/pb/pb_data
+    ports:
+      - "127.0.0.1:8090:8090" # cloudflared (host network) reaches it here
+    networks: [proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.apex.rule: Host(`apex.${LOCAL_DOMAIN}`)
+      traefik.http.routers.apex.middlewares: lan-only@file,apex-no-cf-ip
+      traefik.http.services.apex.loadbalancer.server.port: "8090"
+      # PocketBase trusts CF-Connecting-IP (set by Cloudflare); don't let LAN clients send their own.
+      traefik.http.middlewares.apex-no-cf-ip.headers.customrequestheaders.CF-Connecting-IP: ""
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    cap_drop: [ALL] # non-root on a high port: needs no capabilities
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+networks:
+  proxy:
+    external: true

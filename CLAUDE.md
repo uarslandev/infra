@@ -6,8 +6,8 @@ This repo (`uarslandev/infra`, public) has two parts:
    The `curl | bash` bootstrap in `bin/dotfiles` must keep working unchanged. It runs `ansible-playbook main.yml`
    with `ansible.cfg` (default inventory `inventory.ini`) — do not move or repurpose those files.
    Ask before changing anything in this part.
-2. **Homelab as code**: `homelab.yml`, `inventories/homelab/`, `playbooks/homelab/`, homelab roles
-   (`ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`, `node_exporter`, `docker_host`, `stacks`, `adguard`, `wireguard`), `stacks/`, `terraform/proxmox/`,
+2. **Homelab as code**: `homelab.yml`, `inventories/homelab/`, homelab roles
+   (`ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`, `node_exporter`, `docker_host`, `stacks`, `adguard`, `wireguard`), `stacks/`, `terraform/proxmox/`, `terraform/cloudflare/`,
    `secrets/`, `scripts/homelab/`, `docs/homelab/`. Only run explicitly. Start with `docs/homelab/README.md`.
 
 ## Rules
@@ -33,4 +33,6 @@ This repo (`uarslandev/infra`, public) has two parts:
 - Run Ansible/Terraform from WSL. `ansible.cfg` is ignored in world-writable dirs (`/mnt/c/...`): always set `ANSIBLE_CONFIG=ansible.cfg`.
 - Terraform auth: `sops exec-env terraform/proxmox/secrets.sops.env '<terraform cmd>'`. State is local (gitignored) with an
   encrypted copy `terraform/proxmox/terraform.tfstate.sops`: always apply via `make tf-apply` and commit that file.
+  Cloudflare (tunnel routes + DNS): `make cf-plan` / `make cf-apply` (credentials from `secrets/homelab.sops.yml`, state copy
+  `terraform/cloudflare/terraform.tfstate.sops`). After any route change, check from outside that admin paths answer 404.
 - Agents in `.claude/agents/`: `devops-engineer`, `qa-engineer` (requirements + verification), `security-reviewer` (run before commits).

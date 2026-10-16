@@ -6,6 +6,7 @@ docker_host_virtiofs_mounts:
   jellyfin: /srv/jellyfin
   syncthing: /srv/syncthing
   appdata: /srv/appdata
+  apex: /srv/apex
 
 # Stacks deployed from stacks/<name>/compose.yml, in this order.
 stacks_enabled:
@@ -16,6 +17,7 @@ stacks_enabled:
   - jellyfin
   - syncthing
   - monitoring
+  - apex
 
 # Stacks to stop and remove (data on ZFS is kept).
 stacks_absent:
@@ -25,6 +27,14 @@ stacks_absent:
 
 stacks_root: /opt/stacks
 
+# APEX sync server: image built on the VM from this commit of the private repo (read-only deploy key
+# apex_deploy_key in secrets/homelab.sops.yml). Upgrade = new commit here, then --tags apps.
+apex_repo: git@github.com:uarslandev/apex.git
+apex_version: 1d3e57270be4898054e91344a081afa362ca657b
+apex_uid: 10090 # unprivileged PocketBase user; owns /srv/apex/pb_data
+# From https://api.github.com/meta (ssh_keys); pinned so the clone never trusts an unknown host key.
+apex_github_host_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+
 # Blackbox HTTP checks (alert if a service stops answering).
 monitoring_http_probes:
   - { name: immich, url: "http://192.168.0.85:2283/api/server/ping" }
@@ -33,6 +43,7 @@ monitoring_http_probes:
   - { name: syncthing, url: "http://192.168.0.85:8384/rest/noauth/health" }
   - { name: grafana, url: "http://grafana:3000/api/health" } # internal: no host port
   - { name: proxmox, url: "https://192.168.0.123:8006/" }
+  - { name: apex-public, url: "https://apex-api.{{ homelab_public_domain }}/api/health" } # through the tunnel
 
 # Grafana dashboards from grafana.com (id + pinned revision).
 monitoring_dashboards:

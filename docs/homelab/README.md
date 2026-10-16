@@ -14,14 +14,17 @@ Proxmox VE (boot SSD: OS only)
 │   ├── tank/appdata     small app state: Traefik (ACME), Prometheus, Alertmanager, Grafana
 │   ├── tank/jellyfin    media, config, cache
 │   ├── tank/syncthing   config + data
-│   └── tank/apex        reserved for the APEX sync server
+│   └── tank/apex        APEX sync server (PocketBase database + uploads)
 ├── VM 110 "apps" (Ubuntu 26.04, Docker)       Terraform + Ansible
 │   └── datasets mounted via virtiofs at /srv/<name>; stacks in /opt/stacks/<name>
 ├── LXC 120 "adguard"   (Ubuntu 26.04)         LAN DNS
 └── LXC 121 "wireguard" (Ubuntu 26.04)         VPN for admin access
 ```
 
-- **Public access**: Cloudflare Tunnel (`cloudflared` stack, host network). Admin UIs are never routed through it.
+- **Public access**: Cloudflare Tunnel (`cloudflared` stack, host network). Routes and their DNS records are Terraform
+  (`terraform/cloudflare/tunnel.tf`, `make cf-plan && make cf-apply`); that file owns the tunnel's whole route list, so
+  routes added in the dashboard disappear on the next apply. Only public route: `apex-api.<domain>`, paths `^/api/`
+  (APEX sync API; superuser sign-in is blocked there too). Admin UIs are never routed through it.
 - **LAN names**: `https://<name>.home.<domain>` (photos, cloud, media, grafana, syncthing, proxmox, adguard, traefik).
   AdGuard resolves `*.home.<domain>` to the apps VM (rewrites managed in `inventories/homelab/group_vars/adguard.yml`);
   Traefik terminates TLS with a Let's Encrypt wildcard cert (DNS-01 via Cloudflare) and routes by Docker labels.
@@ -39,6 +42,7 @@ Proxmox VE (boot SSD: OS only)
 | Tool | Responsibility |
 | --- | --- |
 | Terraform (`terraform/proxmox`) | Ubuntu images (pinned + checksum), VM/LXCs, virtiofs directory mappings, cloud-init bootstrap |
+| Terraform (`terraform/cloudflare`) | Tunnel routes + their DNS records (token `cloudflare_terraform_api_token`: Tunnel Edit, DNS Edit, Zone Read) |
 | Ansible (`homelab.yml`) | Proxmox host packages, ZFS datasets, sanoid, Docker, stacks, AdGuard, WireGuard |
 | SOPS + age (`secrets/`, `terraform/proxmox/secrets.sops.env`) | All secrets, encrypted in git; the age key only lives on the admin PC |
 
@@ -60,6 +64,23 @@ make homelab-lint               # before committing
 - Upgrade a service: bump the pinned tag in `stacks/<name>/compose.yml`, read the release notes, run `--tags apps`.
   Nextcloud: one major version at a time. Immich: check the release notes for DB changes.
 - `ansible.cfg` is ignored in world-writable dirs such as `/mnt/c/...`; always set `ANSIBLE_CONFIG=ansible.cfg` (the Make targets do).
+
+### APEX sync server
+
+PocketBase from the private repo `uarslandev/apex` (`server/`). Nothing from that repo is copied here: Ansible clones
+the commit pinned in `apex_version` (`group_vars/docker_hosts.yml`) to `/opt/stacks/apex/src` with a read-only deploy
+key (`apex_deploy_key`, made with `make new-deploy-key`), and compose builds the image on the VM. Data: `tank/apex`
+(`/srv/apex/pb_data`, uid 10090). Rate limits and the trusted `CF-Connecting-IP` header come from a migration in that repo.
+Traefik strips that header from LAN requests; other containers on the `proxy` network could still set it (accepted risk:
+it only skews rate limits and logged IPs).
+
+- Upgrade: set `apex_version` to the new commit, run `--tags apps` (new tag = new build).
+- LAN: `https://apex.home.<domain>` (API + admin UI). Public: `https://apex-api.<domain>/api/` only.
+- Admin from outside: WireGuard, or `ssh -L 8090:127.0.0.1:8090 apps`, then `http://127.0.0.1:8090/_/`.
+- First admin: while none exists, PocketBase prints a one-time `/_/#/pbinstall/...` link in `sudo docker logs apex-pocketbase`
+  (restart the container for a fresh one). Open it through the SSH tunnel (replace `0.0.0.0` with `127.0.0.1`) and set
+  the password there, so it never lands in a shell history, chat or git.
+- Backups: sanoid snapshots of `tank/apex` (crash-consistent SQLite); before upgrades also take a PocketBase backup in the admin UI.
 
 ## Access
 

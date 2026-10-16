@@ -24,6 +24,7 @@ virtiofs_shares = {
   jellyfin  = "/tank/jellyfin"
   syncthing = "/tank/syncthing"
   appdata   = "/tank/appdata"
+  apex      = "/tank/apex"
 }
 
 containers = {

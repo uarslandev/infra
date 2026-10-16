@@ -31,6 +31,14 @@ What existed before the rebuild is summarised under "Removed in the rebuild" bel
 | traefik | v3.7.14 + docker-socket-proxy v0.5.0 | `tank/appdata/traefik` (ACME cert) |
 | monitoring | Prometheus 3.15.0, Alertmanager 0.34.1, Grafana 13.2.4, cAdvisor, blackbox, pve-exporter | `tank/appdata/{prometheus,alertmanager,grafana}` |
 | cloudflared | 2026.8.3 | none (token in SOPS) |
+| apex | PocketBase 0.40.5, built on the VM from `uarslandev/apex` at the pinned `apex_version` | `tank/apex` (new, empty on 2026-10-16) |
+
+## Public routes (Cloudflare Tunnel, `terraform/cloudflare`)
+
+| Hostname | Paths | Target | Checked from outside (2026-10-16) |
+| --- | --- | --- | --- |
+| `apex-api.<domain>` | `^/api/`, except superuser sign-in (`/api/collections/_superusers/`, also by ID) and admin APIs (settings, backups, logs, crons, collection schema), any case | `127.0.0.1:8090` | `/api/health` 200; `/_/`, `/`, superuser sign-in, admin APIs 404; `..` tricks only redirect to `/_/` → 404; 3rd quick bad sign-in → 429 |
+| everything else | | `http_status:404` | |
 
 ## Removed in the rebuild
 
