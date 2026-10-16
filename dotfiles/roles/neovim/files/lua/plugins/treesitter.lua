@@ -17,6 +17,7 @@ return {
     local failed_installs = {}
     local warned_about_missing_cli = false
     local warned_about_incompatible_cli = false
+    local warned_about_missing_compiler = false
     local managed_languages = {
       "bash",
       "css",
@@ -149,6 +150,22 @@ return {
       end, languages)
 
       if #languages == 0 then
+        return false
+      end
+
+      -- tree-sitter build compiles with $CC, falling back to cc
+      local compiler = vim.env.CC ~= nil and vim.env.CC ~= "" and vim.env.CC or "cc"
+      if vim.fn.executable(compiler) ~= 1 then
+        if not warned_about_missing_compiler then
+          warned_about_missing_compiler = true
+          vim.notify_once(
+            ("No C compiler (%s) found, so Tree-sitter parsers cannot be built. Install one (e.g. build-essential) and restart Neovim."):format(
+              compiler
+            ),
+            vim.log.levels.WARN
+          )
+        end
+        mark_install_failed(languages)
         return false
       end
 
