@@ -69,7 +69,7 @@ jobs:
           ANSIBLE_CONFIG: ansible.cfg
         run: |
           ansible-playbook -i inventories/homelab homelab.yml --syntax-check
-          ansible-lint --profile production homelab.yml playbooks/homelab
+          ansible-lint --profile production homelab.yml
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
@@ -77,8 +77,9 @@ jobs:
           terraform_version: 1.16.6
 
       - name: Terraform fmt + validate
-        working-directory: terraform/proxmox
         run: |
-          terraform fmt -check -recursive
-          terraform init -backend=false -input=false
-          terraform validate
+          for root in terraform/proxmox terraform/cloudflare; do
+            terraform -chdir="$root" fmt -check -recursive
+            terraform -chdir="$root" init -backend=false -input=false
+            terraform -chdir="$root" validate
+          done

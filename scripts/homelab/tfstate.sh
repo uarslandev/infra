@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 # Encrypted copy of the local Terraform state in git (SOPS + age, encrypted as one opaque blob,
 # so not even resource names or IPs are readable in the public repo).
-#   scripts/homelab/tfstate.sh backup    # terraform.tfstate -> terraform.tfstate.sops (run after every apply)
-#   scripts/homelab/tfstate.sh restore   # terraform.tfstate.sops -> terraform.tfstate (new machine)
-#   scripts/homelab/tfstate.sh check     # is the encrypted copy up to date?
+#   scripts/homelab/tfstate.sh backup  [root]   # terraform.tfstate -> terraform.tfstate.sops (run after every apply)
+#   scripts/homelab/tfstate.sh restore [root]   # terraform.tfstate.sops -> terraform.tfstate (new machine)
+#   scripts/homelab/tfstate.sh check   [root]   # is the encrypted copy up to date?
+# root: the Terraform root under terraform/ (proxmox or cloudflare), default proxmox.
 set -euo pipefail
-cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/terraform/proxmox"
+root=${2:-proxmox}
+[[ $root =~ ^[a-z]+$ ]] || { echo "root must be a directory name under terraform/"; exit 2; }
+cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)/terraform/$root"
 
 state=terraform.tfstate
 enc=terraform.tfstate.sops
@@ -34,8 +37,8 @@ case ${1:-} in
     if [[ -f $enc && -f $state ]] && cmp -s <(decrypt) "$state"; then
       echo "encrypted state copy is up to date"
     else
-      echo "encrypted state copy is MISSING or OUTDATED: run make tf-backup-state"; exit 1
+      echo "encrypted state copy is MISSING or OUTDATED: run scripts/homelab/tfstate.sh backup $root"; exit 1
     fi
     ;;
-  *) echo "usage: $0 backup|restore|check"; exit 2 ;;
+  *) echo "usage: $0 backup|restore|check [proxmox|cloudflare]"; exit 2 ;;
 esac
