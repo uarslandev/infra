@@ -31,5 +31,6 @@ This repo (`uarslandev/infra`, public) has two parts:
 ## Gotchas
 
 - Run Ansible/Terraform from WSL. `ansible.cfg` is ignored in world-writable dirs (`/mnt/c/...`): always set `ANSIBLE_CONFIG=ansible.cfg`.
-- Terraform auth: `sops exec-env terraform/proxmox/secrets.sops.env '<terraform cmd>'`. State is local and gitignored.
+- Terraform auth: `sops exec-env terraform/proxmox/secrets.sops.env '<terraform cmd>'`. State is local (gitignored) with an
+  encrypted copy `terraform/proxmox/terraform.tfstate.sops`: always apply via `make tf-apply` and commit that file.
 - Agents in `.claude/agents/`: `devops-engineer`, `qa-engineer` (requirements + verification), `security-reviewer` (run before commits).

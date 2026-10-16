@@ -113,7 +113,7 @@ Assumes the `tank` pool is intact. If the boot SSD dies: reinstall Proxmox VE, t
 2. **Proxmox host**: `pveam update`, SSH key for root, then
    `ANSIBLE_CONFIG=ansible.cfg ansible-playbook -i inventories/homelab homelab.yml --tags proxmox`.
 3. **Terraform token** (only if the host was reinstalled): `scripts/homelab/bootstrap-secrets.sh token`.
-4. **Guests**: `make tf-plan`, review, `make tf-apply`.
+4. **Guests**: `make tf-restore-state` (if this machine has no state yet), `make tf-plan`, review, `make tf-apply`.
 5. **Services**: `make homelab`. Stacks start on the existing data in `tank`.
 6. **Check**: Immich `http://<apps>:2283`, Nextcloud `http://<apps>:8080/status.php` (`maintenance:false`),
    `docker ps` all healthy, `wg show` on the WireGuard LXC lists all peers, DNS answers from AdGuard.
@@ -126,4 +126,6 @@ If the data itself has to be restored: roll back to a snapshot (`zfs rollback`) 
 - Ubuntu's `wg-quick` AppArmor profile crashes wg-quick inside unprivileged LXCs; the `wireguard` role disables that one profile in LXCs.
 - In LXCs, `/etc/resolv.conf` is written by Proxmox; don't replace it.
 - Terraform only uses `<type> <key>` of `~/.ssh/id_rsa.pub`: a multi-line key comment broke cloud-init once.
-- Terraform state is local (`terraform/proxmox/terraform.tfstate`, gitignored). It can be rebuilt with `terraform import` if lost.
+- Terraform state is local (`terraform/proxmox/terraform.tfstate`, gitignored); an encrypted copy
+  (`terraform.tfstate.sops`, one opaque SOPS blob) is updated by `make tf-apply` and committed.
+  New machine: `make tf-restore-state` before the first plan. Check: `scripts/homelab/tfstate.sh check`.

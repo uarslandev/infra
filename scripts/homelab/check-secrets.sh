@@ -3,8 +3,9 @@
 set -euo pipefail
 cd "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 
-for f in $(git ls-files --cached --others --exclude-standard | grep -E '\.sops\.(ya?ml|env|json)$' | grep -v '^\.sops\.yaml$'); do
-  if ! grep -q 'ENC\[' "$f" || ! grep -qE '^(sops:|sops_version=)' "$f"; then
+for f in $(git ls-files --cached --others --exclude-standard | grep -E '\.sops(\.(ya?ml|env|json))?$' | grep -v '^\.sops\.yaml$'); do
+  # yaml/env: "sops:" / "sops_version=" metadata; binary/json: a top-level "sops" object
+  if ! grep -q 'ENC\[' "$f" || ! grep -qE '^(sops:|sops_version=)|"sops": *\{' "$f"; then
     echo "NOT ENCRYPTED: $f"; exit 1
   fi
   echo "encrypted: $f"

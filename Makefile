@@ -3,7 +3,7 @@
 # ==============================================================================
 
 .DEFAULT_GOAL := help
-.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret
+.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret tf-backup-state tf-restore-state
 
 help:
 	@echo "Infrastructure & Dotfiles Automation"
@@ -17,7 +17,8 @@ help:
 	@echo ""
 	@echo "Homelab (run from WSL/Linux with the age key in ~/.config/sops/age/keys.txt):"
 	@echo "  make tf-plan        Terraform plan (Proxmox VMs/LXCs)"
-	@echo "  make tf-apply       Apply the last saved plan"
+	@echo "  make tf-apply       Apply the last saved plan (then updates the encrypted state copy)"
+	@echo "  make tf-restore-state   Restore terraform.tfstate from the encrypted copy (new machine)"
 	@echo "  make homelab-check  Ansible dry run with diff"
 	@echo "  make homelab        Apply homelab.yml"
 	@echo "  make homelab-lint   Lint + validate homelab code"
@@ -59,6 +60,7 @@ tf-plan:
 
 tf-apply:
 	$(TF) 'terraform apply tfplan.tfplan'
+	scripts/homelab/tfstate.sh backup
 
 homelab-lint:
 	ANSIBLE_CONFIG=ansible.cfg ansible-playbook -i inventories/homelab homelab.yml --syntax-check
@@ -78,3 +80,9 @@ ssh-config:
 
 set-secret:
 	scripts/homelab/set-secret.sh $(NAME)
+
+tf-backup-state:
+	scripts/homelab/tfstate.sh backup
+
+tf-restore-state:
+	scripts/homelab/tfstate.sh restore

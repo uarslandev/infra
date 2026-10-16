@@ -13,6 +13,7 @@ vault.secret
 .terraform/
 *.tfstate
 *.tfstate.*
+!terraform/proxmox/terraform.tfstate.sops
 *.tfplan
 crash.log
 # never commit keys or decrypted secrets
