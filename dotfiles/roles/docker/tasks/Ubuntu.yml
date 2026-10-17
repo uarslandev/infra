@@ -92,6 +92,17 @@
       become: true
       register: docker_group_add
 
+    # Creating the data dir as root would also create ~/.local/lib as root (mode 0710), locking the
+    # user out of it (npm --prefix ~/.local then fails with EACCES). Create/repair the parent first.
+    - name: "Docker | Ensure ~/.local/lib belongs to the user"
+      ansible.builtin.file:
+        path: "{{ ansible_facts['user_dir'] }}/.local/lib"
+        state: directory
+        owner: "{{ ansible_facts['user_id'] }}"
+        group: "{{ ansible_facts['user_gid'] }}"
+        mode: "0755"
+      become: true
+
     - name: "Docker | Ensure docker data directory exists"
       ansible.builtin.file:
         path: "{{ ansible_facts['user_dir'] }}/.local/lib/docker"
