@@ -23,28 +23,23 @@
   tags:
     - always
 
-- name: Test passwordless sudo
-  ansible.builtin.command: sudo -n true
-  register: sudo_nopass_check
+# Probe with a real become instead of `sudo -n`, so a password given with -K/--ask-become-pass counts too
+# (Ansible does not expose that password as a variable).
+- name: Test privilege escalation
+  become: true
+  ansible.builtin.command: "true"
+  register: become_probe
   changed_when: false
-  failed_when: false
+  ignore_errors: true
   check_mode: false
-  tags:
-    - always
-
-- name: Detect if become password is provided
-  ansible.builtin.set_fact:
-    become_pass_provided: >-
-      {{ ((ansible_become_password | default(ansible_become_pass | default(''))) | string | length) > 0 }}
   tags:
     - always
 
 - name: Set privilege escalation capability facts
   ansible.builtin.set_fact:
-    has_sudo: "{{ sudo_nopass_check.rc == 0 or become_pass_provided }}"
-    can_become: "{{ sudo_nopass_check.rc == 0 or become_pass_provided }}"
-    can_install_packages: >-
-      {{ (sudo_nopass_check.rc == 0 or become_pass_provided) and detected_package_manager != 'unknown' }}
+    has_sudo: "{{ become_probe is succeeded }}"
+    can_become: "{{ become_probe is succeeded }}"
+    can_install_packages: "{{ become_probe is succeeded and detected_package_manager != 'unknown' }}"
   tags:
     - always
 
@@ -52,7 +47,20 @@
   ansible.builtin.debug:
     msg: >-
       Package Manager: '{{ detected_package_manager }}' |
-      Can Install Packages: {{ can_install_packages }} |
-      Passwordless Sudo: {{ sudo_nopass_check.rc == 0 }}
+      Can Install Packages: {{ can_install_packages }}
+  tags:
+    - always
+
+# Skipping every package without sudo looked like a successful run, so stop instead.
+# Machines that really have no sudo can opt in with -e dotfiles_allow_no_sudo=true.
+- name: Stop when system packages cannot be installed
+  ansible.builtin.fail:
+    msg: >-
+      No working sudo, so no system package could be installed. Run bin/dotfiles (or `dotfiles`), which asks
+      for the sudo password and passes it on; plain -K does not reach the dotfiles repo's playbook.
+      To run without sudo anyway: -e dotfiles_allow_no_sudo=true
+  when:
+    - not can_install_packages
+    - not (dotfiles_allow_no_sudo | default(false) | bool)
   tags:
     - always

@@ -220,9 +220,47 @@ main() {
     install_galaxy_requirements
     link_cli
 
+    # Without a sudo password both playbooks (this one and the dotfiles repo it runs) silently skip
+    # every system package. Ask once and pass it as ansible_become_password through a private temp
+    # file (not argv, so it never shows up in `ps`), removed on exit.
+    # `sudo -k -n` ignores this terminal's cached sudo login: Ansible runs sudo without a terminal and
+    # cannot use it, so only real passwordless sudo (NOPASSWD) may skip the prompt.
+    local become_args=()
+    if command -v sudo >/dev/null 2>&1 && ! sudo -k -n true 2>/dev/null \
+        && [[ " $* " != *" -K "* && " $* " != *" --ask-become-pass "* ]]; then
+        # Ubuntu 25.10+ ships sudo-rs as `sudo`; it wraps Ansible's password prompt so Ansible never sees
+        # it and times out. Classic sudo stays installed as sudo.ws, so Ansible uses that when it exists.
+        local sudo_exe=sudo
+        [ -x /usr/bin/sudo.ws ] && sudo_exe=/usr/bin/sudo.ws
+
+        # Check the password with the same sudo Ansible will use. -k ignores a cached sudo login,
+        # which would otherwise accept any typo.
+        local sudo_pw attempt
+        for attempt in 1 2 3; do
+            read -rsp "[sudo] password for ${USER}: " sudo_pw </dev/tty
+            echo
+            if printf '%s\n' "$sudo_pw" | "$sudo_exe" -k -S -p '' true 2>/dev/null; then
+                break
+            fi
+            log_warn "Wrong sudo password."
+            [ "$attempt" -eq 3 ] && { log_error "3 wrong attempts, giving up."; exit 1; }
+        done
+
+        BECOME_VARS_FILE="$(umask 077 && mktemp "${XDG_RUNTIME_DIR:-/tmp}/dotfiles-become.XXXXXX")"
+        trap 'rm -f "$BECOME_VARS_FILE"' EXIT
+        printf '%s' "$sudo_pw" | SUDO_EXE="$sudo_exe" python3 -c '
+import json, os, sys
+v = {"ansible_become_password": sys.stdin.read()}
+if os.environ["SUDO_EXE"] != "sudo":
+    v["ansible_become_exe"] = os.environ["SUDO_EXE"]
+print(json.dumps(v))' >"$BECOME_VARS_FILE"
+        unset sudo_pw
+        become_args=(-e "@$BECOME_VARS_FILE")
+    fi
+
     log_step "Executing Ansible playbook main.yml..."
     cd "$TARGET_DIR"
-    ansible-playbook main.yml "$@"
+    ansible-playbook main.yml "${become_args[@]}" "$@"
 
     log_success "All tasks completed! Your environment and dotfiles are now up to date."
     log_step "You can run ${BOLD}dotfiles${NC} anytime to keep your setup synchronized."
