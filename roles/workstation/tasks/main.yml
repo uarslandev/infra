@@ -45,45 +45,17 @@
   failed_when: false
 
 # ------------------------------------------------------------------------------
-# Desktop & Display Manager Setup (Bare-metal Desktop only; skipped on WSL/VM)
+# System Services (Bare-metal only; skipped on WSL). The display manager is left
+# to the OS installer and never switched here.
 # ------------------------------------------------------------------------------
 
-- name: Desktop | Configure display manager and hardware services
+- name: Desktop | Enable system services
   when:
     - not ansible_host_environment_is_wsl
     - dotfiles_session == 'desktop'
     - (ansible_facts['service_mgr'] | default(ansible_service_mgr | default(''))) == "systemd"
     - can_become | default(false)
   block:
-    - name: Disable conflicting display managers
-      become: true
-      ansible.builtin.systemd_service:
-        name: "{{ item }}"
-        enabled: false
-      loop:
-        - sddm.service
-        - gdm.service
-        - lightdm.service
-      failed_when: false
-
-    - name: Check for ly systemd service file
-      ansible.builtin.stat:
-        path: /usr/lib/systemd/system/ly.service
-      register: ly_unit_stat
-
-    - name: Check for ly templated systemd service file
-      ansible.builtin.stat:
-        path: /usr/lib/systemd/system/ly@.service
-      register: ly_templated_unit_stat
-
-    - name: Enable ly display manager service
-      become: true
-      ansible.builtin.systemd_service:
-        name: "{{ 'ly.service' if ly_unit_stat.stat.exists else 'ly@tty1.service' }}"
-        enabled: true
-        state: "{{ 'started' if (ansible_facts['is_chroot'] is not defined or not ansible_facts['is_chroot']) else omit }}"
-      when: ly_unit_stat.stat.exists or ly_templated_unit_stat.stat.exists
-
     - name: Combine shared and host-specific systemd services
       ansible.builtin.set_fact:
         managed_system_services: "{{ ((system_services | default([])) + (host_system_services | default([]))) | unique }}"
