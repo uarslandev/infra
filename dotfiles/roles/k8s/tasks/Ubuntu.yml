@@ -1,18 +1,13 @@
 ---
-- name: K8s | Adding kubernetes apt key
-  when: can_install_packages | default(false)
-  ansible.builtin.apt_key:
-    url: "https://pkgs.k8s.io/core:/stable:/{{ k8s.repo.version | default('v1.34') }}/deb/Release.key"
-    state: present
-    keyring: "/etc/apt/keyrings/kubernetes-apt-keyring.gpg"
-  become: true
-
+# apt-key is gone since Ubuntu 25.10; deb822_repository downloads the key itself.
 - name: K8s | Adding kubernetes apt repo
   when: can_install_packages | default(false)
-  ansible.builtin.apt_repository:
-    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ k8s.repo.version | default('v1.34') }}/deb/ /"
-    filename: pkgs.k8s.io_core_stable_deb
-    mode: "0644"
+  ansible.builtin.deb822_repository:
+    name: kubernetes
+    types: [deb]
+    uris: "https://pkgs.k8s.io/core:/stable:/{{ k8s.repo.version | default('v1.34') }}/deb/"
+    suites: [/]
+    signed_by: "https://pkgs.k8s.io/core:/stable:/{{ k8s.repo.version | default('v1.34') }}/deb/Release.key"
   become: true
 
 - name: K8s | Installing Kubernetes

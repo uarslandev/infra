@@ -11,35 +11,20 @@
     - can_install_packages | default(false)
     - helm_check.rc != 0
   block:
-    - name: Helm | Ensure keyrings directory exists
-      ansible.builtin.file:
-        path: /usr/share/keyrings
-        state: directory
-        mode: '0755'
-      become: true
-
-    - name: Helm | Download Helm GPG key
-      ansible.builtin.get_url:
-        url: https://baltocdn.com/helm/signing.asc
-        dest: /usr/share/keyrings/helm.gpg
-        mode: '0644'
-      become: true
-      register: helm_gpg_download
-
-    - name: Helm | Install apt-transport-https
-      ansible.builtin.apt:
-        name: apt-transport-https
-        state: present
-      become: true
-
     - name: Helm | Get OS Architecture
       ansible.builtin.set_fact:
         os_arch: "{{ ansible_facts['machine'] | replace('x86_64', 'amd64') | replace('aarch64', 'arm64') }}"
 
+    # Helm's apt repo moved from baltocdn.com (gone) to Buildkite.
     - name: Helm | Add Helm APT repository
-      ansible.builtin.apt_repository:
-        repo: "deb [arch={{ os_arch }} signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main"
-        filename: helm-stable-debian
+      ansible.builtin.deb822_repository:
+        name: helm
+        types: [deb]
+        uris: https://packages.buildkite.com/helm-linux/helm-debian/any/
+        suites: [any]
+        components: [main]
+        architectures: ["{{ os_arch }}"]
+        signed_by: https://packages.buildkite.com/helm-linux/helm-debian/gpgkey
       become: true
 
     - name: Helm | Update APT cache
