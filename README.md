@@ -17,11 +17,12 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bi
 
 ### What this command does automatically:
 1. **Detects the OS & Environment**: Identifies Arch Linux, WSL, Fedora, or Ubuntu/Debian.
-2. **Bootstraps Prerequisites**: Automatically installs `ansible`, `git`, `python3`, and `chezmoi` via the native package manager (`pacman`, `dnf`, or `apt`).
+2. **Bootstraps Prerequisites**: Automatically installs `ansible`, `git`, and `python3` via the native package manager (`pacman`, `dnf`, or `apt`).
 3. **Clones Repository**: Clones this configuration repository to `~/.dotfiles`.
 4. **Installs Galaxy Requirements**: Pulls required Ansible collections (`community.general`).
-5. **Applies Dotfiles & Tools**: Executes [`main.yml`](file:///home/user/ansible/main.yml) on localhost to install developer packages and apply your dotfiles from [`uarslandev/dotfiles.git`](https://github.com/uarslandev/dotfiles.git).
-6. **Exposes the `dotfiles` CLI**: Symlinks `dotfiles` to `~/.local/bin/dotfiles` so you can update and re-sync your environment anytime by simply running `dotfiles`.
+5. **Asks for your sudo password once** (only if sudo needs one) and passes it to both playbooks, so no package install is silently skipped.
+6. **Applies Dotfiles & Tools**: Executes [`main.yml`](main.yml) on localhost to install base packages, then clones [`uarslandev/dotfiles`](https://github.com/uarslandev/dotfiles) to `~/Repos/dotfiles` and runs its playbook (zsh, neovim, tmux, docker, kubectl, helm, k9s, terraform, fonts, ...).
+7. **Exposes the `dotfiles` CLI**: Symlinks `dotfiles` to `~/.local/bin/dotfiles` so you can update and re-sync your environment anytime by simply running `dotfiles`.
 
 ---
 
@@ -46,8 +47,8 @@ cd ~/.dotfiles
 | :--- | :--- | :--- | :--- |
 | **Arch Linux** (Bare-metal) | Pacman + Paru (AUR), Sway/Plasma, Ly DM, `pkgSync` | `pacman` + `paru` | Enabled |
 | **WSL** (Windows Subsystem) | Fast CLI stack, Zsh, Neovim, Tmux, DevOps tools, Dotfiles | Native (`apt`/`dnf`/`pacman`) | Auto-skipped |
-| **Fedora VM** / Host | Modern CLI dev stack, Chezmoi, Starship, Fastfetch, Dotfiles | `dnf` | Tailored |
-| **Ubuntu / Debian** | Build-essential, CLI dev stack, Chezmoi, Starship, Dotfiles | `apt` | Tailored |
+| **Fedora VM** / Host | Modern CLI dev stack, Starship, Fastfetch, Dotfiles | `dnf` | Tailored |
+| **Ubuntu / Debian** | Build-essential, CLI dev stack, Starship, Dotfiles | `apt` | Tailored |
 
 ---
 
@@ -86,9 +87,9 @@ cd ~/.dotfiles
     │   ├── tasks/main.yml       # Dispatches to distro tasks; guards desktop services
     │   ├── tasks/Archlinux.yml  # Pacman + paru + pkgSync (with WSL/VM hardware filtering)
     │   ├── tasks/Ubuntu.yml     # Apt packages + starship installer
-    │   └── tasks/Fedora.yml     # Dnf packages (starship, fastfetch, chezmoi native)
-    ├── devops_tools/            # Docker group & devops CLI tools (kubectl, helm, k9s, kind, terraform)
-    └── dotfiles/                # Auto-installs chezmoi on any OS and applies dotfiles repo
+    │   └── tasks/Fedora.yml     # Dnf packages (starship, fastfetch)
+    ├── devops_tools/            # Docker group & devops CLI tools (Arch/Fedora; on Ubuntu the dotfiles repo does this)
+    └── dotfiles/                # Clones uarslandev/dotfiles and runs its playbook
 ```
 
 Homelab (only run explicitly, never by the bootstrap):
@@ -105,47 +106,16 @@ Homelab (only run explicitly, never by the bootstrap):
 
 ---
 
-## 📂 Managing Dotfiles Always from Here
+## 📂 Managing Dotfiles
 
-Dotfiles are managed via **[Chezmoi](https://www.chezmoi.io/)** backed by [`https://github.com/uarslandev/dotfiles.git`](https://github.com/uarslandev/dotfiles.git).
+Dotfiles live in [`uarslandev/dotfiles`](https://github.com/uarslandev/dotfiles), a separate Ansible project
+(one role per tool). The `dotfiles` role here clones it to `~/Repos/dotfiles` and runs its `main.yml`. Roles
+without tasks for the current distribution (e.g. `plasma` on Ubuntu, macOS-only roles) skip themselves.
 
-### 1. Auto-apply Across All Systems
-Running `dotfiles` or `ansible-playbook main.yml --tags dotfiles` ensures `chezmoi` is installed and runs `chezmoi apply --force` to synchronize:
-- `~/.zshrc`
-- `~/.tmux.conf`
-- `~/.gitconfig`
-- `~/.config/nvim/`
-- `~/.config/sway/`
-- `~/.config/waybar/`
-- `~/.local/bin/tmux-sessionizer`
-
-### 2. Modifying Dotfiles
-To edit, test, and push dotfiles from any of your machines:
-
-```bash
-# 1. Edit a dotfile:
-chezmoi edit ~/.zshrc
-chezmoi edit ~/.config/nvim/init.lua
-
-# 2. Inspect changes:
-chezmoi diff
-
-# 3. Commit and push to GitHub:
-chezmoi cd
-git commit -am "feat: update zsh config"
-git push origin main
-```
-
-Running `dotfiles` on any other machine will immediately pull and apply those changes.
-
-### 3. Adding New Config Files
-```bash
-chezmoi add ~/.config/new-app/config.yml
-chezmoi cd
-git add .
-git commit -m "feat: track new-app config"
-git push origin main
-```
+- Run everything: `dotfiles` (or `make apply`). Only the dotfiles part: `make dotfiles`.
+- Progress of the nested run: `tail -f ~/.cache/dotfiles-last-run.log`.
+- Change a dotfile: edit it in `~/Repos/dotfiles`, commit and push there. The next `dotfiles` run on any machine
+  pulls it. With uncommitted local changes the pull is skipped and the checked-out version is applied.
 
 ---
 

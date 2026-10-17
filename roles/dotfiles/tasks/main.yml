@@ -1,109 +1,101 @@
 ---
 # ==============================================================================
-# Dotfiles Management Role (Chezmoi multi-platform automation)
+# Dotfiles Role
+# The dotfiles repo is its own Ansible project (roles for zsh, neovim, tmux, docker, ...),
+# so it is cloned and its playbook is run as-is. Roles without tasks for the current
+# distribution (e.g. plasma on Ubuntu, macOS-only roles) skip themselves there.
 # ==============================================================================
 
-- name: Dotfiles | Check if chezmoi binary exists in PATH
-  ansible.builtin.command: which chezmoi
-  register: chezmoi_path_check
-  changed_when: false
-  failed_when: false
-  environment:
-    PATH: "{{ user_bin }}:{{ ansible_facts['env']['PATH'] | default('/usr/local/bin:/usr/bin:/bin') }}"
+- name: Dotfiles | Clone the dotfiles repository
+  ansible.builtin.git:
+    repo: "{{ dotfiles_repo }}"
+    dest: "{{ dotfiles_repo_dir }}"
+    update: false
 
-# ------------------------------------------------------------------------------
-# Ensure Chezmoi Installation across all distributions
-# ------------------------------------------------------------------------------
-- name: Dotfiles | Install chezmoi if missing
-  when: chezmoi_path_check.rc != 0
-  block:
-    - name: Dotfiles | Install chezmoi via pacman (Arch Linux)
-      become: true
-      community.general.pacman:
-        name: chezmoi
-        state: present
-      when:
-        - ansible_facts['distribution'] == 'Archlinux'
-        - can_install_packages | default(false)
-
-    - name: Dotfiles | Install chezmoi via dnf (Fedora)
-      become: true
-      ansible.builtin.dnf:
-        name: chezmoi
-        state: present
-      when:
-        - ansible_facts['distribution'] == 'Fedora'
-        - can_install_packages | default(false)
-
-    - name: Dotfiles | Verify if chezmoi is now available via system packages
-      ansible.builtin.command: which chezmoi
-      register: chezmoi_recheck
-      changed_when: false
-      failed_when: false
-      environment:
-        PATH: "{{ user_bin }}:{{ ansible_facts['env']['PATH'] | default('/usr/local/bin:/usr/bin:/bin') }}"
-
-    - name: Dotfiles | Install chezmoi standalone binary via official installer
-      ansible.builtin.shell: |
-        curl -fsSL https://get.chezmoi.io | sh -s -- -b "{{ user_bin }}"
-      args:
-        creates: "{{ user_bin }}/chezmoi"
-      when: chezmoi_recheck.rc != 0
-
-# ------------------------------------------------------------------------------
-# Directory Pre-requisites & Dotfiles Application
-# ------------------------------------------------------------------------------
-- name: Dotfiles | Ensure Neovim config directory exists
-  ansible.builtin.file:
-    path: "{{ user_home }}/.config/nvim"
-    state: directory
-    owner: "{{ target_user }}"
-    mode: '0755'
-
-- name: Dotfiles | Check if local chezmoi source repository exists
-  ansible.builtin.stat:
-    path: "{{ user_home }}/.local/share/chezmoi"
-  register: chezmoi_repo_stat
-
-- name: Dotfiles | Initialize Chezmoi with dotfiles repository
-  become: true
-  become_user: "{{ target_user }}"
+# Plain fast-forward pull: never discards local edits or unpushed commits (the git module can reset them).
+- name: Dotfiles | Update the dotfiles repository
   ansible.builtin.command:
-    cmd: "chezmoi init --apply {{ dotfiles_repo }}"
-  environment:
-    PATH: "{{ user_bin }}:{{ ansible_facts['env']['PATH'] | default('/usr/local/bin:/usr/bin:/bin') }}"
-  when:
-    - dotfiles_repo is defined
-    - dotfiles_repo | length > 0
-    - not chezmoi_repo_stat.stat.exists
-  register: chezmoi_init_result
-  changed_when: chezmoi_init_result.rc == 0
+    cmd: git pull --ff-only
+    chdir: "{{ dotfiles_repo_dir }}"
+  register: dotfiles_git
+  changed_when: "'Already up to date' not in dotfiles_git.stdout"
   failed_when: false
+  when: not ansible_check_mode
 
-- name: Dotfiles | Apply latest Chezmoi dotfiles if repository already exists
-  become: true
-  become_user: "{{ target_user }}"
-  ansible.builtin.command:
-    cmd: "chezmoi apply --force"
-  environment:
-    PATH: "{{ user_bin }}:{{ ansible_facts['env']['PATH'] | default('/usr/local/bin:/usr/bin:/bin') }}"
-  when:
-    - chezmoi_repo_stat.stat.exists
-  register: chezmoi_apply_result
-  changed_when: chezmoi_apply_result.rc == 0
-  failed_when: false
-
-- name: Dotfiles | Query Chezmoi managed files
-  become: true
-  become_user: "{{ target_user }}"
-  ansible.builtin.command:
-    cmd: "chezmoi managed"
-  environment:
-    PATH: "{{ user_bin }}:{{ ansible_facts['env']['PATH'] | default('/usr/local/bin:/usr/bin:/bin') }}"
-  register: chezmoi_managed_files
-  changed_when: false
-  failed_when: false
-
-- name: Dotfiles | Display Chezmoi status
+- name: Dotfiles | Warn when the repository could not be updated (local changes?)
   ansible.builtin.debug:
-    msg: "Chezmoi dotfiles configured! Currently managing {{ (chezmoi_managed_files.stdout_lines | default([])) | length }} files from '{{ dotfiles_repo }}'."
+    msg: "Could not update {{ dotfiles_repo_dir }}, running the checked-out version: {{ dotfiles_git.stderr | default('') }}"
+  when: (dotfiles_git.rc | default(0)) != 0
+
+# In --check mode nothing is cloned, so the rest is skipped on a first run.
+- name: Dotfiles | Check for the cloned repository
+  ansible.builtin.stat:
+    path: "{{ dotfiles_repo_dir }}/main.yml"
+  register: dotfiles_repo_stat
+
+- name: Dotfiles | Skip note for --check without a clone
+  ansible.builtin.debug:
+    msg: "{{ dotfiles_repo_dir }} is not cloned yet (check mode): skipping the dotfiles playbook."
+  when: not dotfiles_repo_stat.stat.exists
+
+- name: Dotfiles | Install the dotfiles repo's Ansible collections
+  when: dotfiles_repo_stat.stat.exists
+  ansible.builtin.command:
+    cmd: ansible-galaxy collection install -r requirements/common.yml
+    chdir: "{{ dotfiles_repo_dir }}"
+  register: dotfiles_galaxy
+  changed_when: "'was installed successfully' in dotfiles_galaxy.stdout"
+
+- name: Dotfiles | Run the dotfiles playbook
+  when: dotfiles_repo_stat.stat.exists
+  block:
+    # Ansible does not expose a -K password to tasks; one passed as a variable (bin/dotfiles does) is
+    # handed on the same way, through a private temp file that is removed afterwards.
+    - name: Dotfiles | Private temp file for the sudo password
+      ansible.builtin.tempfile:
+        path: "{{ ansible_facts['env']['XDG_RUNTIME_DIR'] | default(omit) }}"
+        prefix: dotfiles-become.
+      register: dotfiles_become_file
+      when: ansible_become_password is defined
+
+    - name: Dotfiles | Write the sudo password for the nested run
+      ansible.builtin.copy:
+        content: >-
+          {{ {'ansible_become_password': ansible_become_password}
+             | combine({'ansible_become_exe': ansible_become_exe} if ansible_become_exe is defined else {})
+             | to_json }}
+        dest: "{{ dotfiles_become_file.path }}"
+        mode: "0600"
+      no_log: true
+      when: ansible_become_password is defined
+
+    - name: Dotfiles | Progress of the nested run
+      ansible.builtin.debug:
+        msg: "Running {{ dotfiles_repo_dir }}/main.yml (takes a while). Follow it with: tail -f {{ dotfiles_log }}"
+
+    - name: Dotfiles | ansible-playbook main.yml in the dotfiles repo
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail;
+          ansible-playbook main.yml
+          {{ ('-e @' + dotfiles_become_file.path) if ansible_become_password is defined else '' }}
+          {{ '--check' if ansible_check_mode else '' }}
+          2>&1 | tee {{ dotfiles_log | quote }} | tail -n 40
+        chdir: "{{ dotfiles_repo_dir }}"
+        executable: /bin/bash
+      environment:
+        ANSIBLE_CONFIG: "{{ dotfiles_repo_dir }}/ansible.cfg"
+        ANSIBLE_FORCE_COLOR: "0"
+      check_mode: false
+      register: dotfiles_run
+      changed_when: dotfiles_run.stdout is regex('changed=[1-9]')
+
+    - name: Dotfiles | Result
+      ansible.builtin.debug:
+        var: dotfiles_run.stdout_lines
+  always:
+    - name: Dotfiles | Remove the sudo password file
+      ansible.builtin.file:
+        path: "{{ dotfiles_become_file.path }}"
+        state: absent
+      when: dotfiles_become_file.path is defined

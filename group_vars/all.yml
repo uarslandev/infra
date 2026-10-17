@@ -7,8 +7,11 @@ target_user: "{{ (ansible_facts['user_id'] | default(ansible_user_id | default('
 user_home: "/home/{{ target_user }}"
 user_bin: "{{ user_home }}/.local/bin"
 
-# Chezmoi Dotfiles Repository URL (managed across all environments)
+# Dotfiles repository (its own Ansible project; the dotfiles role clones it and runs its playbook).
+# Not ~/.dotfiles: that is where bin/dotfiles clones this repo.
 dotfiles_repo: "https://github.com/uarslandev/dotfiles.git"
+dotfiles_repo_dir: "{{ user_home }}/Repos/dotfiles"
+dotfiles_log: "{{ user_home }}/.cache/dotfiles-last-run.log"
 
 # Default role pipeline executed in order
 default_roles:
@@ -27,7 +30,9 @@ exclude_roles_by_session:
 # Dynamic role pruning by distribution
 exclude_roles_by_distribution:
   Archlinux: []
-  Ubuntu: []
+  # Docker, kubectl, helm, kind, terraform, k9s come from the dotfiles repo on Ubuntu.
+  Ubuntu:
+    - devops_tools
   Fedora: []
 
 # ------------------------------------------------------------------------------
@@ -84,6 +89,5 @@ fedora_system_packages:
   - npm
   - unzip
   - openssh-clients
-  - chezmoi
   - starship
   - fastfetch

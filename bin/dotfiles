@@ -114,7 +114,6 @@ bootstrap_arch() {
     command -v ansible >/dev/null 2>&1 || pkgs+=(ansible)
     command -v git >/dev/null 2>&1 || pkgs+=(git)
     command -v python3 >/dev/null 2>&1 || pkgs+=(python)
-    command -v chezmoi >/dev/null 2>&1 || pkgs+=(chezmoi)
 
     if [ ${#pkgs[@]} -gt 0 ]; then
         log_step "Installing ${pkgs[*]} via pacman..."
@@ -149,7 +148,6 @@ bootstrap_fedora() {
     command -v ansible >/dev/null 2>&1 || pkgs+=(ansible)
     command -v git >/dev/null 2>&1 || pkgs+=(git)
     command -v python3 >/dev/null 2>&1 || pkgs+=(python3)
-    command -v chezmoi >/dev/null 2>&1 || pkgs+=(chezmoi)
 
     if [ ${#pkgs[@]} -gt 0 ]; then
         log_step "Installing ${pkgs[*]} via dnf..."
