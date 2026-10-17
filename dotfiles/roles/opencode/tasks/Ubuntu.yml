@@ -11,12 +11,16 @@
   changed_when: false
   failed_when: false
 
+# --prefix ~/.local: a plain `npm install -g` targets root-owned /usr/local and fails without sudo.
+# The binary lands in ~/.local/bin/opencode, one of opencode_bin_candidates.
 - name: "{{ role_name }} | Ubuntu | Install OpenCode via npm"
   ansible.builtin.command:
     argv:
       - "{{ opencode_npm.stdout }}"
       - install
       - -g
+      - --prefix
+      - "{{ ansible_facts['env']['HOME'] }}/.local"
       - opencode-ai
   when:
     - opencode_installed.rc != 0

@@ -1,7 +1,8 @@
 ---
-- name: "Neofetch | Ubuntu | Install neofetch"
+# neofetch is unmaintained and no longer packaged since Ubuntu 25.10; fastfetch is its successor.
+- name: "Neofetch | Ubuntu | Install fastfetch (neofetch successor)"
   when: can_install_packages | default(false)
   ansible.builtin.apt:
-    name: neofetch
+    name: fastfetch
     state: present
   become: true

@@ -16,6 +16,7 @@
     name: "{{ item }}"
     state: present
     force: true
+    update_cache: true # deb822_repository does not refresh the package lists
   loop:
     - kubectl
   become: true

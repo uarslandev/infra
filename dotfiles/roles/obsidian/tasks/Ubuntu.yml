@@ -1,15 +1,9 @@
 ---
-- name: Obsidian | Detect if Desktop Environment"
-  ansible.builtin.set_fact:
-    ansible_host_is_desktop_environment: "{{ lookup('env', 'XDG_CURRENT_DESKTOP') }}"
-
-- name: "Obsidian | Install"
-  community.general.flatpak:
-    name: "md.obsidian.Obsidian"
-    state: present
-  when:
-    - not ansible_host_environment_is_wsl
-    - ansible_host_is_desktop_environment | bool
+# The flatpak role installs Obsidian from Flathub on desktops. It runs later, so flatpak itself
+# is not installed yet at this point (and `XDG_CURRENT_DESKTOP | bool` was always false anyway).
+- name: "Obsidian | Ubuntu | Installed by the flatpak role"
+  ansible.builtin.debug:
+    msg: "Obsidian is installed from Flathub by the flatpak role."
 
 
 # - name: "Obsidian | Create Cron Job to Pull, Commit, and Push to Git"
