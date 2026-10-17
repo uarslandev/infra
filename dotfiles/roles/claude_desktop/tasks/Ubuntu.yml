@@ -1,0 +1,80 @@
+---
+# Claude Desktop is Debian/Ubuntu only (beta); there is no Arch or Fedora package.
+- name: "Claude Desktop | Install from Anthropic's apt repository"
+  become: true
+  when:
+    - can_become | default(false)
+    - not (ansible_host_environment_is_wsl | default(false))
+  block:
+    - name: "Claude Desktop | gnupg for key verification"
+      ansible.builtin.apt:
+        name: gnupg
+        state: present
+
+    # The key is verified in a temp file and only then copied to the path apt trusts (signed-by).
+    - name: "Claude Desktop | Verify and install signing key"
+      block:
+        - name: "Claude Desktop | Temp file for the downloaded key"
+          ansible.builtin.tempfile:
+            suffix: .asc
+          register: claude_desktop_key_tmp
+
+        - name: "Claude Desktop | Download signing key"
+          ansible.builtin.get_url:
+            url: "{{ claude_desktop_key_url }}"
+            dest: "{{ claude_desktop_key_tmp.path }}"
+            mode: "0644"
+            force: true
+          check_mode: false
+
+        - name: "Claude Desktop | Read signing key fingerprints"
+          ansible.builtin.command: gpg --show-keys --with-colons {{ claude_desktop_key_tmp.path }}
+          register: claude_desktop_key_info
+          changed_when: false
+          check_mode: false
+
+        # Exactly one primary key, and it must be Anthropic's (an extra key in the file would be trusted too).
+        - name: "Claude Desktop | Signing key is Anthropic's and nothing else"
+          ansible.builtin.assert:
+            that:
+              - claude_desktop_key_info.stdout_lines | select('match', '^pub:') | list | length == 1
+              - ("fpr:::::::::" + claude_desktop_key_fingerprint + ":") in claude_desktop_key_info.stdout
+            fail_msg: "Downloaded key is not exactly {{ claude_desktop_key_fingerprint }}"
+            quiet: true
+
+        - name: "Claude Desktop | Install verified signing key"
+          ansible.builtin.copy:
+            src: "{{ claude_desktop_key_tmp.path }}"
+            dest: "{{ claude_desktop_keyring }}"
+            remote_src: true
+            mode: "0644"
+      always:
+        - name: "Claude Desktop | Remove temp key"
+          ansible.builtin.file:
+            path: "{{ claude_desktop_key_tmp.path }}"
+            state: absent
+          when: claude_desktop_key_tmp.path is defined
+
+    - name: "Claude Desktop | Apt repository"
+      ansible.builtin.copy:
+        content: "{{ claude_desktop_repo }}\n"
+        dest: /etc/apt/sources.list.d/claude-desktop.list
+        mode: "0644"
+
+    - name: "Claude Desktop | Install"
+      ansible.builtin.apt:
+        name: claude-desktop
+        state: present
+        update_cache: true
+
+    # Cowork runs tasks in a QEMU/KVM VM and needs /dev/vhost-vsock, which only the kvm group can open.
+    - name: "Claude Desktop | Add user to kvm group (Cowork)"
+      ansible.builtin.user:
+        name: "{{ ansible_facts['user_id'] }}"
+        groups: kvm
+        append: true
+
+- name: "Claude Desktop | Package install skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Claude Desktop installation skipped because sudo is not available."
+  when: not (can_become | default(false))

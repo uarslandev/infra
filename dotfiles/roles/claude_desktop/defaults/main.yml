@@ -1,0 +1,9 @@
+---
+role_name: claude_desktop
+
+# Anthropic's apt repository (https://code.claude.com/docs/en/desktop-linux). Paths and the source line match
+# what the claude-desktop package itself writes, so apt never sees the repository twice.
+claude_desktop_key_url: "https://downloads.claude.ai/claude-desktop/key.asc"
+claude_desktop_key_fingerprint: "31DDDE24DDFAB679F42D7BD2BAA929FF1A7ECACE"
+claude_desktop_keyring: /usr/share/keyrings/claude-desktop-archive-keyring.asc
+claude_desktop_repo: "deb [arch=amd64,arm64 signed-by={{ claude_desktop_keyring }}] https://downloads.claude.ai/claude-desktop/apt/stable stable main"
