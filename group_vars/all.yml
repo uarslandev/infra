@@ -60,6 +60,11 @@ ubuntu_system_packages:
   - unzip
   - openssh-client
   - ca-certificates
+  - xz-utils
+  - fastfetch
+  - wl-clipboard
+  - keepassxc
+  - nextcloud-desktop
 
 # ------------------------------------------------------------------------------
 # Fedora Workstation Packages (CLI & Development Stack)
