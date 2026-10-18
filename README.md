@@ -15,7 +15,7 @@ One repo for all my infrastructure:
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bin/dotfiles)"
 ```
 
-Clones this repo to `~/Repos/infra`, links `~/.dotfiles` → `~/Repos/infra/dotfiles` (the shell config expects
+Clones this repo to `~/.infra`, links `~/.dotfiles` → `~/.infra/dotfiles` (the shell config expects
 `~/.dotfiles`), asks for the sudo password once and runs the dev environment playbook. Afterwards: `dotfiles`
 (or `make dotfiles`) applies changes, `dotsave "msg"` / `wip "msg"` commits and pushes this repo.
 

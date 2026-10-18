@@ -5,7 +5,7 @@ This repo (`uarslandev/infra`, public) holds all infrastructure, as two separate
 1. **Dev environment / dotfiles** (`dotfiles/`, own `main.yml`, `ansible.cfg`, `roles/`, `group_vars/`): installs every
    tool and its config on Arch, Ubuntu (desktop/WSL/server) and Fedora. Entry point `bin/dotfiles`:
    `bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bin/dotfiles)"` must keep working.
-   It clones to `~/Repos/infra` and links `~/.dotfiles` -> `~/Repos/infra/dotfiles` (shell config uses `~/.dotfiles`).
+   It clones to `~/.infra` and links `~/.dotfiles` -> `~/.infra/dotfiles` (shell config uses `~/.dotfiles`).
    New program = new role in `dotfiles/roles/<tool>/` (install tasks + `files/` with its config). Its own notes:
    `dotfiles/AGENTS.md`. Ask before changing this part.
 2. **Homelab as code**: `homelab.yml`, `inventories/homelab/` (always passed with `-i`; `ansible.cfg` sets no default

@@ -267,12 +267,11 @@ useradd -m -G wheel -s /bin/bash "$USERNAME"
 echo "$USERNAME:$USER_PASS" | chpasswd
 echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/10-wheel && chmod 0440 /etc/sudoers.d/10-wheel
 
-# Dev environment (infra repo, dotfiles/ folder); after the first login run: ~/Repos/infra/bin/dotfiles
-if [[ ! -f "/home/$USERNAME/Repos/infra/dotfiles/main.yml" ]]; then
-    mkdir -p "/home/$USERNAME/Repos"
-    git clone https://github.com/uarslandev/infra.git "/home/$USERNAME/Repos/infra"
+# Dev environment (infra repo, dotfiles/ folder); after the first login run: ~/.infra/bin/dotfiles
+if [[ ! -f "/home/$USERNAME/.infra/dotfiles/main.yml" ]]; then
+    git clone https://github.com/uarslandev/infra.git "/home/$USERNAME/.infra"
 fi
-ln -sfn "/home/$USERNAME/Repos/infra/dotfiles" "/home/$USERNAME/.dotfiles"
+ln -sfn "/home/$USERNAME/.infra/dotfiles" "/home/$USERNAME/.dotfiles"
 chown -R "$USERNAME:$USERNAME" "/home/$USERNAME"
 
 systemctl enable NetworkManager

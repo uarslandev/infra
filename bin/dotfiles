@@ -3,7 +3,7 @@
 # Dev environment bootstrap (PC, WSL, servers). One command on any machine:
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bin/dotfiles)"
 #
-# 1. Clones this repo (default ~/Repos/infra, override with INFRA_DIR) if needed.
+# 1. Clones this repo (default ~/.infra, override with INFRA_DIR) if needed.
 # 2. Links ~/.dotfiles -> <infra>/dotfiles (the shell config expects ~/.dotfiles) and
 #    ~/.local/bin/dotfiles -> this script, moving old-layout clones aside (nothing is deleted).
 # 3. Runs the dev environment's own bootstrap, dotfiles/bin/dotfiles, with all arguments.
@@ -11,7 +11,9 @@
 set -euo pipefail
 
 REPO_URL="${INFRA_REPO_URL:-https://github.com/uarslandev/infra.git}"
-DEFAULT_DIR="$HOME/Repos/infra"
+DEFAULT_DIR="$HOME/.infra"
+OLD_DEFAULT_DIR="$HOME/Repos/infra"   # briefly the default (2026-10-18); moved to DEFAULT_DIR below
+EXPLICIT_INFRA_DIR="${INFRA_DIR:-}"
 
 note() { printf '\033[38;2;137;180;250m\033[1m[*]\033[0m %b\n' "$1"; }
 fail() { printf '\033[38;2;243;139;168m\033[1m[✗]\033[0m %b\n' "$1" >&2; exit 1; }
@@ -36,6 +38,15 @@ if [ "$(readlink -f "$INFRA_DIR")" = "$(readlink -f "$HOME/.dotfiles")" ] && [ !
         mv "$HOME/.dotfiles" "$DEFAULT_DIR"
         note "Moved the infra clone from ~/.dotfiles to $DEFAULT_DIR"
     fi
+    INFRA_DIR="$DEFAULT_DIR"
+fi
+
+# Previous default location ~/Repos/infra: move it to ~/.infra (unless INFRA_DIR was set explicitly).
+if [ -z "$EXPLICIT_INFRA_DIR" ] && [ ! -e "$DEFAULT_DIR" ] && [ ! -L "$OLD_DEFAULT_DIR" ] \
+    && [ -f "$OLD_DEFAULT_DIR/dotfiles/main.yml" ] \
+    && { [ "$INFRA_DIR" = "$DEFAULT_DIR" ] || [ "$(readlink -f "$INFRA_DIR")" = "$(readlink -f "$OLD_DEFAULT_DIR")" ]; }; then
+    mv "$OLD_DEFAULT_DIR" "$DEFAULT_DIR"
+    note "Moved the infra clone from ~/Repos/infra to ~/.infra"
     INFRA_DIR="$DEFAULT_DIR"
 fi
 
