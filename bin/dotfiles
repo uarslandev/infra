@@ -1,34 +1,74 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Moved: the dev environment and dotfiles now live in github.com/uarslandev/dotfiles
-# (this repo is homelab-only). This forwarder keeps the old command working:
+# Dev environment bootstrap (PC, WSL, servers). One command on any machine:
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bin/dotfiles)"
-# New command:
-#   bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/dotfiles/main/bin/dotfiles)"
+#
+# 1. Clones this repo (default ~/Repos/infra, override with INFRA_DIR) if needed.
+# 2. Links ~/.dotfiles -> <infra>/dotfiles (the shell config expects ~/.dotfiles) and
+#    ~/.local/bin/dotfiles -> this script, moving old-layout clones aside (nothing is deleted).
+# 3. Runs the dev environment's own bootstrap, dotfiles/bin/dotfiles, with all arguments.
 # ==============================================================================
 set -euo pipefail
 
-NEW_URL="https://raw.githubusercontent.com/uarslandev/dotfiles/main/bin/dotfiles"
+REPO_URL="${INFRA_REPO_URL:-https://github.com/uarslandev/infra.git}"
+DEFAULT_DIR="$HOME/Repos/infra"
 
-printf '\033[38;2;249;226;175m\033[1m[!]\033[0m %b\n    %s\n' \
-    "The dev environment moved to \033[1mgithub.com/uarslandev/dotfiles\033[0m. Forwarding there; next time use:" \
-    "bash -c \"\$(curl -fsSL ${NEW_URL})\""
+note() { printf '\033[38;2;137;180;250m\033[1m[*]\033[0m %b\n' "$1"; }
+fail() { printf '\033[38;2;243;139;168m\033[1m[✗]\033[0m %b\n' "$1" >&2; exit 1; }
+backup_path() { local p="$1.old"; [ -e "$p" ] && p="$p.$(date +%Y%m%d%H%M%S)"; printf '%s' "$p"; }
 
-# Machines set up by the old bootstrap have an infra clone in ~/.dotfiles, where the dotfiles repo now
-# belongs. Move it aside (nothing is deleted) so the new bootstrap can clone dotfiles there.
-if git -C "$HOME/.dotfiles" remote get-url origin 2>/dev/null | grep -q "uarslandev/infra"; then
-    backup="$HOME/.dotfiles.infra-old"
-    [ -e "$backup" ] && backup="$backup.$(date +%Y%m%d%H%M%S)"
-    mv "$HOME/.dotfiles" "$backup"
-    printf '%s\n' "    Moved the old infra clone ~/.dotfiles to ${backup/#$HOME/\~} (delete it when you no longer need it)."
+# This checkout when run from one (also through the ~/.local/bin symlink), else INFRA_DIR or the default.
+self="${BASH_SOURCE[0]:-}"
+if [ -z "${INFRA_DIR:-}" ] && [ -n "$self" ] && [ -f "$self" ]; then
+    root="$(cd "$(dirname "$(readlink -f "$self")")/.." && pwd)"
+    [ -f "$root/dotfiles/main.yml" ] && INFRA_DIR="$root"
+fi
+INFRA_DIR="${INFRA_DIR:-$DEFAULT_DIR}"
+
+# Old layout: infra itself was cloned to ~/.dotfiles. Move it to the default location instead.
+if [ "$(readlink -f "$INFRA_DIR")" = "$(readlink -f "$HOME/.dotfiles")" ] && [ ! -L "$HOME/.dotfiles" ]; then
+    if [ -e "$DEFAULT_DIR" ]; then
+        backup="$(backup_path "$HOME/.dotfiles")"
+        mv "$HOME/.dotfiles" "$backup"
+        note "Moved the old clone ~/.dotfiles to ${backup/#$HOME/\~}; using $DEFAULT_DIR"
+    else
+        mkdir -p "$(dirname "$DEFAULT_DIR")"
+        mv "$HOME/.dotfiles" "$DEFAULT_DIR"
+        note "Moved the infra clone from ~/.dotfiles to $DEFAULT_DIR"
+    fi
+    INFRA_DIR="$DEFAULT_DIR"
 fi
 
-# A local clone wins (no download); otherwise fetch the new bootstrap, which clones to ~/.dotfiles.
-for local_bin in ${DOTFILES_DIR:+"$DOTFILES_DIR/bin/dotfiles"} "$HOME/.dotfiles/bin/dotfiles" "$HOME/Repos/dotfiles/bin/dotfiles"; do
-    if [ -x "$local_bin" ] && [ -f "$(dirname "$local_bin")/../main.yml" ] \
-        && grep -q "uarslandev/dotfiles" "$local_bin" 2>/dev/null; then
-        exec "$local_bin" "$@"
+if [ ! -d "$INFRA_DIR" ]; then
+    if ! command -v git >/dev/null 2>&1; then
+        note "Installing git"
+        if command -v apt-get >/dev/null 2>&1; then sudo apt-get update -y && sudo apt-get install -y git
+        elif command -v dnf >/dev/null 2>&1; then sudo dnf install -y git
+        elif command -v pacman >/dev/null 2>&1; then sudo pacman -S --needed --noconfirm git
+        else fail "Please install git first."; fi
     fi
-done
-script="$(curl -fsSL "$NEW_URL")" || { echo "Could not download ${NEW_URL}" >&2; exit 1; }
-exec bash -c "$script" dotfiles "$@"
+    note "Cloning $REPO_URL into $INFRA_DIR"
+    mkdir -p "$(dirname "$INFRA_DIR")"
+    git clone --quiet "$REPO_URL" "$INFRA_DIR"
+fi
+[ -f "$INFRA_DIR/dotfiles/main.yml" ] || fail "$INFRA_DIR is not an infra checkout (no dotfiles/main.yml)."
+
+# ~/.dotfiles must be a link to <infra>/dotfiles. A real directory there (an old clone of infra or of
+# github.com/uarslandev/dotfiles) is moved aside.
+target="$INFRA_DIR/dotfiles"
+if [ -L "$HOME/.dotfiles" ]; then
+    [ "$(readlink -f "$HOME/.dotfiles")" = "$(readlink -f "$target")" ] || ln -sfn "$target" "$HOME/.dotfiles"
+else
+    if [ -e "$HOME/.dotfiles" ]; then
+        backup="$(backup_path "$HOME/.dotfiles")"
+        mv "$HOME/.dotfiles" "$backup"
+        note "Moved the old ~/.dotfiles to ${backup/#$HOME/\~} (delete it when you no longer need it)"
+    fi
+    ln -s "$target" "$HOME/.dotfiles"
+    note "Linked ~/.dotfiles -> $target"
+fi
+
+mkdir -p "$HOME/.local/bin"
+ln -sfn "$INFRA_DIR/bin/dotfiles" "$HOME/.local/bin/dotfiles"
+
+exec "$target/bin/dotfiles" "$@"

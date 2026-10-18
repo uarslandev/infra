@@ -1,12 +1,16 @@
 # ==============================================================================
-# Homelab Makefile - Automation Shortcuts
-# (The dev environment / dotfiles moved to github.com/uarslandev/dotfiles.)
+# Makefile - Automation Shortcuts (dev environment + homelab)
 # ==============================================================================
 
 .DEFAULT_GOAL := help
-.PHONY: help homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret tf-backup-state tf-restore-state cf-plan cf-apply cf-restore-state new-deploy-key
+.PHONY: help dotfiles dotfiles-check dotfiles-lint homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret tf-backup-state tf-restore-state cf-plan cf-apply cf-restore-state new-deploy-key
 
 help:
+	@echo "Dev environment (this machine; project in dotfiles/):"
+	@echo "  make dotfiles       Install/update everything (same as running: dotfiles)"
+	@echo "  make dotfiles-check Dry run of the dev environment playbook"
+	@echo "  make dotfiles-lint  Syntax check of the dev environment playbook"
+	@echo ""
 	@echo "Homelab as code (run from WSL/Linux with the age key in ~/.config/sops/age/keys.txt):"
 	@echo "  make tf-plan        Terraform plan (Proxmox VMs/LXCs)"
 	@echo "  make tf-apply       Apply the last saved plan (then updates the encrypted state copy)"
@@ -21,6 +25,20 @@ help:
 	@echo "  make ssh-config     SSH config for all homelab hosts (WSL + Windows) from the inventory"
 	@echo "  make set-secret NAME=cloudflare_dns_api_token   Store a token you have (hidden prompt, no editor)"
 	@echo "  make new-deploy-key NAME=apex_deploy_key COMMENT=homelab-apps-apex   SSH deploy key into sops, prints the .pub"
+
+# ------------------------------------------------------------------------------
+# Dev environment
+# ------------------------------------------------------------------------------
+DOTFILES_ANSIBLE = cd dotfiles && ANSIBLE_CONFIG=ansible.cfg ansible-playbook main.yml
+
+dotfiles:
+	./bin/dotfiles
+
+dotfiles-check:
+	$(DOTFILES_ANSIBLE) --check
+
+dotfiles-lint:
+	$(DOTFILES_ANSIBLE) --syntax-check
 
 # ------------------------------------------------------------------------------
 # Homelab
