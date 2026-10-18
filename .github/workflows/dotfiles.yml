@@ -10,6 +10,9 @@ on:
     branches: [main]
     paths: ['dotfiles/**', 'bin/dotfiles', '.github/workflows/dotfiles.yml', '.github/dotfiles-markdown-link-config.json']
 
+permissions:
+  contents: read
+
 jobs:
   ansible-lint:
     name: Ansible syntax + lint
@@ -25,7 +28,7 @@ jobs:
       - name: Install Ansible & Linter
         run: |
           python -m pip install --upgrade pip
-          pip install ansible-core ansible-lint
+          pip install ansible-core==2.21.5 ansible-lint==26.10.1
       - name: Install Galaxy collections
         run: ansible-galaxy collection install -r requirements/common.yml
       - name: Syntax check
@@ -68,7 +71,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install yamllint
-        run: pip install yamllint
+        run: pip install yamllint==1.38.0
       - name: Run yamllint
         run: |
           cat > /tmp/yamllint.yml << 'EOF'

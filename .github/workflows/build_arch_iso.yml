@@ -1,12 +1,13 @@
 name: Build Arch ISO with LTS Kernel and ZFS
+# Manual only ("Run workflow" in the Actions tab): it builds in a privileged container and publishes a
+# release, so it should not run unattended in the repo that also holds the homelab.
 on:
   workflow_dispatch:
-  schedule:
-    - cron:  '30 4 4 * *'
 
+# Read-only by default; only the publish job may create releases.
 permissions:
-  contents: write
-  
+  contents: read
+
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
@@ -123,6 +124,8 @@ jobs:
   download-and-publish:
     runs-on: ubuntu-latest
     needs: build-and-upload
+    permissions:
+      contents: write
     strategy:
       matrix:
         name: [iso, sha]
@@ -142,7 +145,7 @@ jobs:
         run: |
           ls -alh
       - name: publish
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@29e53e917877a24fad85510ded594ab3c9ca12de # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ./${{ matrix.file }}

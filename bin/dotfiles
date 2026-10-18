@@ -71,4 +71,6 @@ fi
 mkdir -p "$HOME/.local/bin"
 ln -sfn "$INFRA_DIR/bin/dotfiles" "$HOME/.local/bin/dotfiles"
 
-exec "$target/bin/dotfiles" "$@"
+# DOTFILES_DIR explicitly: a stale value from the environment would otherwise send the inner script
+# back here (it hands over to this bootstrap when its directory is missing).
+exec env DOTFILES_DIR="$target" "$target/bin/dotfiles" "$@"
