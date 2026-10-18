@@ -30,20 +30,21 @@ if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
     fi
 fi
 
+# %b (not %s) so color codes inside messages, e.g. "${BOLD}dotfiles${NC}", are rendered.
 log_step() {
-    printf "${BLUE}${BOLD}[*]${NC} %s\n" "$1"
+    printf "${BLUE}${BOLD}[*]${NC} %b\n" "$1"
 }
 
 log_success() {
-    printf "${GREEN}${BOLD}[✓]${NC} %s\n" "$1"
+    printf "${GREEN}${BOLD}[✓]${NC} %b\n" "$1"
 }
 
 log_warn() {
-    printf "${YELLOW}${BOLD}[!]${NC} %s\n" "$1"
+    printf "${YELLOW}${BOLD}[!]${NC} %b\n" "$1"
 }
 
 log_error() {
-    printf "${RED}${BOLD}[✗]${NC} %s\n" "$1"
+    printf "${RED}${BOLD}[✗]${NC} %b\n" "$1"
 }
 
 print_banner() {
