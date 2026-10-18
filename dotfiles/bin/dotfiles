@@ -726,7 +726,11 @@ ask_become_password() {
     fi
   done
 
-  BECOME_VARS_FILE="$(umask 077 && mktemp "${XDG_RUNTIME_DIR:-/tmp}/dotfiles-become.XXXXXX")"
+  # A private directory (XDG_RUNTIME_DIR is RAM-backed); never the shared /tmp, where a killed run
+  # could leave the file behind.
+  local secret_dir="${XDG_RUNTIME_DIR:-$HOME/.cache/dotfiles}"
+  mkdir -p -m 700 "$secret_dir"
+  BECOME_VARS_FILE="$(umask 077 && mktemp "$secret_dir/dotfiles-become.XXXXXX")"
   printf '%s' "$sudo_pw" | SUDO_EXE="$sudo_exe" python3 -c '
 import json, os, sys
 v = {"ansible_become_password": sys.stdin.read()}

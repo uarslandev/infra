@@ -104,23 +104,23 @@
         - name: "Packages | Archlinux | Clone paru"
           ansible.builtin.git:
             repo: https://aur.archlinux.org/paru.git
-            dest: /tmp/paru-build
+            dest: "{{ ansible_facts['user_dir'] }}/.cache/paru-build"
             update: true
 
         - name: "Packages | Archlinux | Build paru"
           ansible.builtin.command:
             cmd: makepkg -sf --noconfirm
-            chdir: /tmp/paru-build
+            chdir: "{{ ansible_facts['user_dir'] }}/.cache/paru-build"
           changed_when: true
 
         - name: "Packages | Archlinux | Install paru"
-          ansible.builtin.shell: pacman -U --noconfirm /tmp/paru-build/*.pkg.tar.zst
+          ansible.builtin.shell: "pacman -U --noconfirm {{ ansible_facts['user_dir'] }}/.cache/paru-build/*.pkg.tar.zst"
           become: true
           changed_when: true
 
         - name: "Packages | Archlinux | Remove paru build directory"
           ansible.builtin.file:
-            path: /tmp/paru-build
+            path: "{{ ansible_facts['user_dir'] }}/.cache/paru-build"
             state: absent
 
     - name: "Packages | Archlinux | Check paru again"

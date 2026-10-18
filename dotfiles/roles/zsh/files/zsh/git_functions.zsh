@@ -95,11 +95,28 @@ wip() {
   local branch
   branch=$(git symbolic-ref --quiet --short HEAD) || { echo "wip: detached HEAD, check out a branch first" >&2; return 1; }
 
-  git add -A || return 1
+  # New (untracked) files need a yes: a stray .env or token dump must not go public in one keystroke.
+  local untracked
+  untracked=$(git ls-files --others --exclude-standard)
+  if [[ -n "$untracked" ]]; then
+    echo "wip: new files:"
+    print -r -- "$untracked" | sed 's/^/  + /'
+    if read -q "?Add these new files too? [y/N] "; then
+      echo
+      git add -A || return 1
+    else
+      echo
+      echo "wip: committing changes to tracked files only"
+      git add -u || return 1
+    fi
+  else
+    git add -u || return 1
+  fi
+
   if git diff --cached --quiet; then
     echo "wip: nothing new to commit"
   else
-    git diff --cached --stat
+    git --no-pager diff --cached --stat
     git commit --quiet -m "${*:-wip: $(hostname -s) $(date '+%Y-%m-%d %H:%M')}" || return 1
     echo "wip: committed on $branch: $(git log -1 --format=%s)"
   fi
