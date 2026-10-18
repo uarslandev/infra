@@ -17,6 +17,7 @@ arch_pacman_upgrade_extra_args: "--disable-download-timeout"
 default_roles:
   # === Core ===
   - system
+  - packages  # base packages per distro (Arch: full pacman/AUR lists, see roles/packages/vars)
   - 1password  # installed early so secret-backed roles can read the vault
   - fonts
   - git
