@@ -1,0 +1,28 @@
+name: Validate Markdown Links
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths: ['**/*.md']
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Check markdown links
+        run: |
+          status=0
+          for f in $(find . -name "*.md" -not -path "./.git/*"); do
+            npx -y markdown-link-check "$f" --config .github/workflows/markdown-link-config.json || status=1
+          done
+          exit $status

@@ -1,0 +1,12 @@
+---
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Install tldr"
+  ansible.builtin.dnf:
+    name: tldr
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Package installation skipped: tldr"
+  when: not (can_install_packages | default(false))

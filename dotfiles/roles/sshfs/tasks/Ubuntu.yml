@@ -1,0 +1,7 @@
+---
+- name: Sshfs | {{ ansible_facts['distribution'] }} | Install sshfs
+  when: can_install_packages | default(false)
+  ansible.builtin.apt:
+    name: sshfs
+    state: present
+  become: true

@@ -1,0 +1,19 @@
+---
+- name: Configure Windows PowerShell ExecutionPolicy
+  ansible.builtin.shell: |
+    Set-ExecutionPolicy RemoteSigned -Force -Scope CurrentUser
+    $CurrentPolicy = Get-ExecutionPolicy
+    Write-Host ($CurrentPolicy -eq 'RemoteSigned')
+  register: ps_exec_result
+  changed_when: ps_exec_result.stdout != 'True'
+  failed_when: false
+  args:
+    executable: powershell.exe
+
+- name: Warn when the ExecutionPolicy could not be confirmed
+  ansible.builtin.debug:
+    msg:
+      - "Could not run powershell.exe from WSL (Windows interop unavailable)."
+      - "Windows-side tasks will be skipped. To restore interop: run `wsl.exe --shutdown`"
+      - "from Windows PowerShell, reopen WSL, then rerun dotfiles."
+  when: ps_exec_result.rc | default(1) != 0

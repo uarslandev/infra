@@ -1,0 +1,5 @@
+---
+- name: "Rust | {{ ansible_facts['distribution'] }} | Install Rust (includes cargo)"
+  community.general.homebrew:
+    name: rust
+    state: present

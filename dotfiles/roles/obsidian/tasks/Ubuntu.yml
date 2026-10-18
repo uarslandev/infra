@@ -1,0 +1,15 @@
+---
+# The flatpak role installs Obsidian from Flathub on desktops. It runs later, so flatpak itself
+# is not installed yet at this point (and `XDG_CURRENT_DESKTOP | bool` was always false anyway).
+- name: "Obsidian | Ubuntu | Installed by the flatpak role"
+  ansible.builtin.debug:
+    msg: "Obsidian is installed from Flathub by the flatpak role."
+
+
+# - name: "Obsidian | Create Cron Job to Pull, Commit, and Push to Git"
+#   ansible.builtin.cron:
+#     name: "Git Pull, Commit, and Push"
+#     minute: "*"
+#     job: "cd {{ ansible_facts['user_dir'] }}/SecondBrain && git pull && git add -A && git commit -m 'Auto backup from $HOSTNAME' && git push"
+#   become: true
+

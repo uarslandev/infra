@@ -1,0 +1,8 @@
+---
+# Packages unique to this host (file name = hostname); shared packages are in vars/archlinux.yml.
+host_system_packages:
+  []
+
+host_aur_packages:
+  - zfs-linux
+

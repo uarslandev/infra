@@ -1,0 +1,8 @@
+---
+- name: "TMate | Install"
+  when: can_install_packages | default(false)
+  ansible.builtin.apt:
+    name:
+      - tmate
+    state: latest
+  become: true

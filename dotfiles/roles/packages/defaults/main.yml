@@ -1,0 +1,97 @@
+---
+# Base system packages per distribution (moved here from uarslandev/infra).
+# Tools with their own role (fzf, neovim, tmux, docker, ...) are installed by that role, not here.
+
+packages_ubuntu:
+  - build-essential
+  - curl
+  - wget
+  - git
+  - zsh
+  - ripgrep
+  - fd-find
+  - jq
+  - btop
+  - htop
+  - python3
+  - python3-pip
+  - python3-venv
+  - nodejs
+  - npm
+  - unzip
+  - openssh-client
+  - ca-certificates
+  - xz-utils
+  - fastfetch
+  - wl-clipboard
+  - keepassxc
+  - nextcloud-desktop
+
+packages_fedora:
+  - make
+  - automake
+  - gcc
+  - gcc-c++
+  - kernel-devel
+  - curl
+  - wget
+  - git
+  - gh
+  - zsh
+  - ripgrep
+  - fd-find
+  - jq
+  - btop
+  - htop
+  - python3
+  - python3-pip
+  - nodejs
+  - npm
+  - unzip
+  - openssh-clients
+  - starship
+  - fastfetch
+
+# Arch: the shared and per-host package lists live in vars/ (edited by pkgSync), loaded by Archlinux.yml.
+
+# Systemd services enabled on bare-metal Arch desktops (not on WSL or headless machines).
+packages_arch_services:
+  - bluetooth.service
+  - docker.service
+  - NetworkManager.service
+
+# Hardware and desktop packages dropped on WSL and headless Arch machines.
+packages_arch_desktop_only:
+  - amd-ucode
+  - intel-ucode
+  - linux
+  - linux-firmware
+  - linux-headers
+  - broadcom-wl-dkms
+  - dkms
+  - sof-firmware
+  - wireless-regdb
+  - dosfstools
+  - efibootmgr
+  - iwd
+  - ly
+  - sddm
+  - sddm-kcm
+  - plasma-meta
+  - plasma-nm
+  - plasma-pa
+  - powerdevil
+  - kscreen
+
+# Never auto-removed, even when dropped from the lists.
+packages_arch_protected:
+  - tar
+  - util-linux
+  - wpa_supplicant
+  - zfs-utils
+  - base
+  - base-devel
+  - linux
+  - systemd
+  - sudo
+  - openssh

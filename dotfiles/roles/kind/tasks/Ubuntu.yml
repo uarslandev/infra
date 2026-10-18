@@ -1,0 +1,13 @@
+---
+- name: kind | Install kind with Go
+  ansible.builtin.command:
+    cmd: "go install {{ item.package }}"
+    creates: "{{ ansible_facts['env']['HOME'] }}/go/bin/{{ item.cmd }}"
+  # The go role installs to /usr/local/go, which is not on Ansible's PATH.
+  environment:
+    PATH: "/usr/local/go/bin:{{ ansible_facts['env']['PATH'] }}"
+  loop_control:
+    label: "{{ item.package }}"
+  loop:
+    - { package: sigs.k8s.io/kind@latest, cmd: kind }
+

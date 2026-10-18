@@ -1,0 +1,38 @@
+---
+- name: "gh | Check if gh is installed"
+  ansible.builtin.command: which gh
+  register: gh_check
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: "gh | Install from DNF repository"
+  ansible.builtin.dnf:
+    name: gh
+    state: present
+  become: true
+  when:
+    - can_install_packages | default(false)
+    - gh_check.rc != 0
+
+- name: "gh | Install from GitHub Release"
+  when:
+    - ansible_facts['architecture'] in ['x86_64', 'aarch64']
+    - not (can_install_packages | default(false)) or gh_check.rc != 0
+  block:
+    - name: "gh | Ensure user-local bin directory exists"
+      ansible.builtin.file:
+        path: "{{ ansible_facts['user_dir'] }}/.local/bin"
+        state: directory
+        mode: "0755"
+      when: not (can_install_packages | default(false))
+
+    - name: "gh | Install from GitHub Release using github_release role"
+      ansible.builtin.include_role:
+        name: github_release
+      vars:
+        github_release_repo: "cli/cli"
+        github_release_binary_name: "gh"
+        github_release_asset_name_pattern: '^gh_.*_linux_{{ ansible_facts["architecture"] | replace("x86_64", "amd64") | replace("aarch64", "arm64") }}\.tar\.gz$'
+        github_release_install_path: "{{ (ansible_facts['user_dir'] + '/.local/bin') if not (can_install_packages | default(false)) else '/usr/local/bin' }}"
+        github_release_become: "{{ can_install_packages | default(false) }}"

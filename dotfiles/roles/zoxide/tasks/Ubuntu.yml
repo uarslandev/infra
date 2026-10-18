@@ -1,0 +1,30 @@
+---
+- name: "Zoxide | {{ ansible_facts['distribution'] }} | Install Zoxide"
+  ansible.builtin.apt:
+    name:
+      - zoxide
+    state: present
+  become: true
+  when:
+    - can_install_packages | default(false)
+    - ansible_facts['distribution_version'] >= '21.04'
+
+- name: "Zoxide | {{ ansible_facts['distribution'] }} | Ensure user-local bin directory exists"
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+  when: not (can_install_packages | default(false))
+
+- name: "Zoxide | {{ ansible_facts['distribution'] }} | Install Zoxide from GitHub Release"
+  ansible.builtin.include_role:
+    name: github_release
+  when: not (can_install_packages | default(false)) or ansible_facts['distribution_version'] < '21.04'
+  vars:
+    github_release_repo: "ajeetdsouza/zoxide"
+    github_release_binary_name: "zoxide"
+    github_release_asset_name_pattern: '^zoxide-[^-]+-{{ ansible_facts["machine"] }}-unknown-linux-musl\.tar\.gz$'
+    github_release_version_pattern: '[0-9]+\.[0-9]+\.[0-9]+'
+    github_release_check_command: "zoxide --version"
+    github_release_install_path: "{{ (ansible_facts['user_dir'] + '/.local/bin') if not (can_install_packages | default(false)) else '/usr/local/bin' }}"
+    github_release_become: "{{ can_install_packages | default(false) }}"

@@ -1,0 +1,7 @@
+---
+- name: TShark | Install TShark
+  when: can_install_packages | default(false)
+  ansible.builtin.package:
+    name: tshark
+    state: present
+  become: true

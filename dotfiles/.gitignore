@@ -1,0 +1,73 @@
+vault-password.txt
+
+# Python cache directories
+__pycache__/
+*.pyc
+*.pyo
+
+roles/neovim/files/lazy-lock.json
+
+# Defensive only: refresh rejects Git worktree destinations, but never stage a
+# local plaintext cache or its temporary files if XDG_STATE_HOME is misdirected.
+secrets.zsh
+.secrets.zsh.*
+.secrets.restore.*
+
+.DS_Store
+*.DS_Store
+
+# Company-specific Claude commands (not for public repo)
+roles/claude/files/commands/raft/
+roles/claude/files/skills/rafty
+roles/claude/files/commands/raft-*.md
+roles/claude/files/agents/raft-*.md
+roles/claude/files/hooks/peon-ping/
+roles/claude/files/skills/peon-ping-*/
+
+# Herdr-managed Claude integration artifacts
+roles/claude/files/hooks/herdr-agent-state.sh
+
+# Crush directory
+.crush/
+
+# Claude session snapshots (personal work state)
+.claude/snapshots/
+
+# Ansible cache/runtime directories
+.ansible/
+
+# OMP runtime state is ignored; project skills are repository-managed.
+.omp/*
+!.omp/skills/
+!.omp/skills/**
+
+# OMP advisory config locks follow managed symlinks into this role.
+roles/omp/files/**/config.yml.lock
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+.env
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Task files
+tasks.json
+
+# Superpowers local state
+.superpowers/
+docs/superpowers/

@@ -1,0 +1,252 @@
+# ====================================================================
+# Dotfiles Configuration Example
+# ====================================================================
+#
+# This file contains all available configuration options with examples
+# and documentation. Copy this to `all.yml` in the same directory and
+# customize for your setup.
+#
+# Quick Start:
+# 1. Copy: cp all.yml.example all.yml
+# 2. Edit: nvim all.yml
+# 3. Run: dotfiles
+# ====================================================================
+
+# Arch/CachyOS pacman defaults. CachyOS mirrors can occasionally stall on large
+# packages; this keeps package installs from failing due to curl's low-speed timer.
+arch_pacman_extra_args: "--disable-download-timeout"
+arch_pacman_update_cache_extra_args: "--disable-download-timeout"
+arch_pacman_upgrade_extra_args: "--disable-download-timeout"
+
+# --------------------------------------------------------------------
+# ROLES CONFIGURATION
+# --------------------------------------------------------------------
+# Choose which tools to install. Include a role to install it, comment
+# out or remove to skip. Roles run in the listed order on every supported
+# distribution (Archlinux/CachyOS, Ubuntu, Fedora, macOS); each role only
+# runs the tasks that exist for the current distro. A role with no task
+# file for your distro is skipped silently.
+
+default_roles:
+  # === Core (Recommended) ===
+  - system         # Essential system configuration (upgrades, sudo, keyboard, paru)
+  - 1password      # 1Password CLI; installed early so secret-backed roles can read the vault
+  - fonts          # Developer-friendly fonts (Nerd Fonts, optional vault font)
+
+  # === Development Core ===
+  - git            # Version control system
+  - bash           # Bash shell config (oh-my-bash, aliases, functions)
+  - neovim         # Modern text editor (AUR nightly on Arch)
+  - tmux           # Terminal multiplexer for session management
+
+  # === Terminal Environment ===
+  - vscode         # Visual Studio Code
+  - kitty          # GPU-accelerated terminal
+  - starship       # Beautiful shell prompt (used by the bash config)
+  - fzf            # Fuzzy finder for files and commands
+
+  # === File Management ===
+  - bat            # Better 'cat' with syntax highlighting
+  - lsd            # Better 'ls' with icons and colors
+  - zoxide         # Smart 'cd' command that learns your habits
+  - btop           # Modern system monitor
+  - ncdu           # Disk usage analyzer
+
+  # === Git Workflow ===
+  - gh             # GitHub CLI for repo management
+  - lazygit        # Terminal UI for git operations
+  - jj             # Jujutsu - modern version control (git-compatible)
+  - worktrunk      # Git worktree management
+
+  # === Development Languages ===
+  - python         # Python programming language
+  - nvm            # Node Version Manager (must run before npm)
+  - npm            # Node Package Manager
+  - go             # Go programming language
+  - rust           # Rust programming language
+  - lua            # Lua programming language
+  - bun            # Bun JavaScript runtime and toolkit
+  - clangd         # Native C/C++ language server (LSP)
+
+  # === Infrastructure ===
+  - terraform      # Infrastructure as Code
+  - terragrunt     # Terraform wrapper for DRY configurations
+  - docker         # Container platform
+  - podman         # Alternative container platform
+
+  # === Kubernetes Ecosystem ===
+  - k8s            # Kubernetes command-line tools
+  - helm           # Kubernetes package manager
+  - k9s            # Kubernetes cluster management UI
+  - lfk            # Fast Kubernetes terminal UI alternative to k9s
+  - kind           # Kubernetes in Docker for local testing
+
+  # === Desktop (Arch/CachyOS only - skipped automatically elsewhere) ===
+  - plasma         # KDE Plasma Wayland desktop and KWin summon workflow
+  - steam          # Steam/Proton/Gamescope support for Arch/CachyOS
+
+  # === Apps ===
+  - discord        # Team communication
+  - signal         # Private messaging
+  - brave          # Privacy-focused web browser
+  - obsidian       # Knowledge management and note-taking
+  - spotify        # Music streaming
+
+  # === Remote & Network ===
+  - ssh            # SSH client config and 1Password key deployment
+  - sshfs          # Mount remote filesystems via SSH
+  - tmate          # Terminal sharing for pair programming
+
+  # === Misc Dev Tools ===
+  - taskfile       # Modern task runner (alternative to make)
+  - tldr           # Simplified command documentation
+  - opencode       # OpenCode CLI and user-level config
+  - herdr          # Terminal workspace for parallel coding agents
+  - tern           # Multiplexing terminal (settings.json sync; app installed by hand)
+  - flatpak        # Universal Linux package manager
+  - zsh            # Zsh shell with oh-my-zsh (does not change your login shell)
+
+  # === AI & Local LLM ===
+  - ollama         # Run LLMs locally
+  - omp            # oh-my-posh prompt + oh-my-pi CLI
+
+  # === Fun & Info ===
+  - asciiquarium   # Animated ASCII aquarium for your terminal
+  - neofetch       # System information display
+  - nerdfetch      # Alternative system info with ASCII art
+  - slides         # Terminal-based presentation tool
+
+  # === macOS Specific (skipped automatically on Linux) ===
+  - aldente        # Battery charge limiter for macOS
+  - raycast        # macOS launcher and productivity tool
+  - hammerspoon    # macOS automation and window management
+  - orbstack       # Docker Desktop alternative for macOS
+  - superwhisper   # Voice dictation for macOS
+  - borders        # Window borders for macOS
+
+  # === Available but off by default (uncomment to enable) ===
+  # - awesomewm     # X11 window manager - installs a full desktop stack (Ubuntu task file only)
+  # - alacritty     # Cross-platform GPU-accelerated terminal
+  # - claude        # Claude Code CLI and user-level config
+  # - codex         # Codex CLI and user-level agent config
+  # - goreleaser    # Go application release automation
+  # - just          # Command runner (modern alternative to make)
+  # - kwctl         # Kubernetes policy engine management
+  # - nomad         # HashiCorp Nomad (alternative to Kubernetes)
+  # - pwsh          # PowerShell for cross-platform scripting
+  # - ruby          # Ruby programming language
+  # - sesh          # Tmux session manager
+  # - tshark        # Command-line network protocol analyzer
+  # - wireguard     # Modern VPN solution
+  # - aws           # Amazon Web Services CLI
+  # - azure         # Microsoft Azure CLI
+
+# --------------------------------------------------------------------
+# USER CONFIGURATION
+# --------------------------------------------------------------------
+
+# REQUIRED: Your name for git commits and configurations
+# This will be used for git config user.name
+git_user_name: "Your Full Name"
+
+# 1Password CLI account used by pre_tasks and secret-bearing roles.
+# op_account: my.1password.com
+
+# Optional keyboard layout for Linux system paths (localectl on Arch/Fedora).
+#
+# keyboard:
+#   model: pc105
+#   layout: us
+#   options:
+#     - caps:none
+
+# --------------------------------------------------------------------
+# 1PASSWORD INTEGRATION (Optional but Recommended)
+# --------------------------------------------------------------------
+# Securely manage secrets using 1Password CLI instead of storing them
+# in plain text. Requires 1Password CLI to be installed and
+# authenticated. Everything fails soft when 1Password is missing or
+# locked: affected roles skip secret sync and tell you how to retry.
+
+# op:
+#   git:
+#     user:
+#       # Your git email stored in 1Password
+#       # Format: "op://VaultName/ItemName/FieldName"
+#       email: "op://Personal/GitHub/email"
+#
+#     # SSH allowed signers for git commit verification
+#     allowed_signers: "op://Personal/GitHub SSH/allowed_signers"
+#
+#   ssh:
+#     github:
+#       # Personal GitHub SSH keys
+#       personal:
+#         - name: id_ed25519              # Key name (creates ~/.ssh/id_ed25519)
+#           vault_path: "op://Personal/GitHub SSH"
+#
+#       # Work GitHub SSH keys (if you have multiple accounts)
+#       # work:
+#       #   - name: work_key
+#       #     vault_path: "op://Work/GitHub SSH"
+#
+#   fonts:
+#     # Paid font installed from your vault (see roles/fonts/README.md)
+#     berkeley_mono:
+#       vault: "Private"
+#       item: "BerkeleyMono Fonts"
+#       files:
+#         - field: BerkeleyMonoNerdFont-Regular
+#           filename: BerkeleyMonoNerdFont-Regular.otf
+
+# --------------------------------------------------------------------
+# LANGUAGE-SPECIFIC CONFIGURATIONS
+# --------------------------------------------------------------------
+
+# === Kubernetes Configuration ===
+# Kubernetes repo version (k8s role)
+# k8s:
+#   repo:
+#     version: "v1.34"
+
+# === Obsidian ===
+# Git URL of your Obsidian vault. Leave empty to skip cloning.
+# obsidian_repo: "git@github.com:you/SecondBrain.git"
+
+# === Go Packages ===
+# Extra tools installed with `go install` (requires the go role)
+go:
+  packages:
+    - package: github.com/go-task/task/v3/cmd/task@latest
+      cmd: task                    # Command name to install
+    # LSP servers for OpenCode
+    - package: golang.org/x/tools/gopls@latest
+      cmd: gopls
+
+# === Helm Configuration ===
+# Uncomment if you want extra helm repos
+# helm:
+#   repos:
+#     - name: traefik
+#       url: https://helm.traefik.io/traefik
+
+# --------------------------------------------------------------------
+# TROUBLESHOOTING
+# --------------------------------------------------------------------
+# Common issues:
+#
+# 1. "Role not found" - Check spelling in default_roles list
+# 2. "1Password authentication failed" - Run: op signin
+# 3. "Permission denied" - Cache sudo with `sudo -v` or run with --ask-become-pass
+# 4. "Ansible not found" - The bootstrap script should install it
+#
+# For detailed troubleshooting: docs/TROUBLESHOOTING.md
+
+# --------------------------------------------------------------------
+# GETTING STARTED
+# --------------------------------------------------------------------
+# 1. Save this file as 'all.yml' in the same directory
+# 2. Edit the git_user_name field above
+# 3. Choose your roles by commenting/uncommenting lines in default_roles
+# 4. Run: dotfiles
+# 5. Customize as needed and re-run dotfiles to apply changes

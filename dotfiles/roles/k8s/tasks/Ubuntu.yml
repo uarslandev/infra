@@ -1,0 +1,77 @@
+---
+# apt-key is gone since Ubuntu 25.10; deb822_repository downloads the key itself.
+- name: K8s | Adding kubernetes apt repo
+  when: can_install_packages | default(false)
+  ansible.builtin.deb822_repository:
+    name: kubernetes
+    types: [deb]
+    uris: "https://pkgs.k8s.io/core:/stable:/{{ k8s.repo.version | default('v1.34') }}/deb/"
+    suites: [/]
+    signed_by: "https://pkgs.k8s.io/core:/stable:/{{ k8s.repo.version | default('v1.34') }}/deb/Release.key"
+  become: true
+
+- name: K8s | Installing Kubernetes
+  when: can_install_packages | default(false)
+  ansible.builtin.apt:
+    name: "{{ item }}"
+    state: present
+    force: true
+    update_cache: true # deb822_repository does not refresh the package lists
+  loop:
+    - kubectl
+  become: true
+
+# User-local installation without sudo
+- name: "K8s | {{ ansible_facts['distribution'] }} | Detect kubectl"
+  ansible.builtin.command: which kubectl
+  register: k8s_kubectl_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: not (can_install_packages | default(false))
+
+- name: "K8s | {{ ansible_facts['distribution'] }} | Resolve kubectl install directory"
+  ansible.builtin.set_fact:
+    k8s_kubectl_install_dir: "{{ k8s_kubectl_install_dir | default(ansible_facts['user_dir'] + '/.local/bin') }}"
+  when: not (can_install_packages | default(false))
+
+- name: "K8s | {{ ansible_facts['distribution'] }} | Fetch latest stable kubectl version"
+  ansible.builtin.uri:
+    url: "https://dl.k8s.io/release/stable.txt"
+    return_content: true
+  register: k8s_kubectl_stable
+  check_mode: false
+  when: not (can_install_packages | default(false))
+
+- name: "K8s | {{ ansible_facts['distribution'] }} | Set kubectl download facts"
+  ansible.builtin.set_fact:
+    k8s_kubectl_url: "https://dl.k8s.io/release/{{ k8s_kubectl_stable.content | trim }}/bin/linux/{{ ansible_facts['machine'] | replace('x86_64', 'amd64') | replace('aarch64', 'arm64') }}/kubectl"
+  when: not (can_install_packages | default(false))
+
+- name: "K8s | {{ ansible_facts['distribution'] }} | Ensure kubectl install directory exists"
+  ansible.builtin.file:
+    path: "{{ k8s_kubectl_install_dir }}"
+    state: directory
+    mode: "0755"
+  when: not (can_install_packages | default(false))
+
+- name: "K8s | {{ ansible_facts['distribution'] }} | Install kubectl binary"
+  ansible.builtin.get_url:
+    url: "{{ k8s_kubectl_url }}"
+    dest: "{{ k8s_kubectl_install_dir }}/kubectl"
+    mode: "0755"
+  when: not (can_install_packages | default(false))
+
+# - name: K8s | Configure .kube/config
+#   block:
+#     - name: K8s | Ensure .kube directory exists
+#       ansible.builtin.file:
+#         path: "~/.kube"
+#         state: directory
+#         mode: "0755"
+#
+#     - name: K8s | Copy .kube/config file
+#       ansible.builtin.copy:
+#         src: config
+#         dest: "~/.kube/config"
+#         mode: "0600"

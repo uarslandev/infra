@@ -1,0 +1,20 @@
+---
+- name: "Terraform | {{ ansible_facts['distribution'] }} | Add the official HashiCorp repository"
+  ansible.builtin.get_url:
+    url: https://rpm.releases.hashicorp.com/fedora/hashicorp.repo
+    dest: /etc/yum.repos.d/hashicorp.repo
+    mode: "0644"
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Terraform | {{ ansible_facts['distribution'] }} | Install Terraform"
+  ansible.builtin.dnf:
+    name: terraform
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Terraform | {{ ansible_facts['distribution'] }} | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Package installation skipped: terraform"
+  when: not (can_install_packages | default(false))

@@ -1,0 +1,6 @@
+---
+- name: Cleanup Tldr downloaded binary
+  ansible.builtin.file:
+    path: /tmp/tldr
+    state: absent
+  become: true

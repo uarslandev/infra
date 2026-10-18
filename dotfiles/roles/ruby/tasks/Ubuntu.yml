@@ -1,0 +1,9 @@
+---
+- name: "Ruby | Install"
+  when: can_install_packages | default(false)
+  ansible.builtin.apt:
+    name:
+      - ruby
+      - ruby-dev
+    state: latest
+  become: true

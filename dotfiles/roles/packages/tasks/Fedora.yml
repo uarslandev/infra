@@ -1,0 +1,12 @@
+---
+- name: "Packages | Fedora | Install base packages"
+  ansible.builtin.dnf:
+    name: "{{ packages_fedora }}"
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "Packages | Fedora | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Base package installation skipped because sudo is not available."
+  when: not (can_install_packages | default(false))

@@ -1,0 +1,14 @@
+---
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Install Python"
+  ansible.builtin.dnf:
+    name:
+      - python3
+      - python3-pip
+    state: present
+  become: true
+  when: can_install_packages | default(false)
+
+- name: "{{ role_name }} | {{ ansible_facts['distribution'] }} | Packages skipped (no sudo)"
+  ansible.builtin.debug:
+    msg: "Package installation skipped: python3, python3-pip"
+  when: not (can_install_packages | default(false))

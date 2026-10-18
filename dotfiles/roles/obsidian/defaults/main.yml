@@ -1,0 +1,5 @@
+---
+role_name: obsidian
+
+obsidian_repo: ""
+obsidian_dest: "{{ ansible_facts['user_dir'] }}/SecondBrain"

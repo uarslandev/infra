@@ -1,0 +1,20 @@
+---
+# apt-key is gone since Ubuntu 25.10; deb822_repository downloads the key itself.
+- name: Terraform | {{ ansible_facts['distribution'] }} | Add the official HashiCorp Linux repository
+  when: can_install_packages | default(false)
+  ansible.builtin.deb822_repository:
+    name: hashicorp
+    types: [deb]
+    uris: https://apt.releases.hashicorp.com
+    suites: ["{{ ansible_facts['distribution_release'] }}"]
+    components: [main]
+    signed_by: https://apt.releases.hashicorp.com/gpg
+  become: true
+
+- name: Terraform | {{ ansible_facts['distribution'] }} | Install Terraform
+  when: can_install_packages | default(false)
+  ansible.builtin.apt:
+    name: terraform
+    state: present
+    update_cache: true
+  become: true

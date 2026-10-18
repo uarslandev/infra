@@ -1,0 +1,61 @@
+---
+- name: "Tldr | Download Latest Version JSON"
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/psibi/tldr-hs/releases/latest
+  register: tldr_latest_version_json
+  changed_when: false
+  check_mode: false
+
+- name: "Tldr | Registering Tldr Latest Release"
+  ansible.builtin.set_fact:
+    tldr_latest_release: "{{ tldr_latest_version_json.json.tag_name }}"
+
+- name: "Tldr | Getting version information"
+  ansible.builtin.shell:
+    cmd: |
+      echo "v$(/usr/local/bin/tldr -v)"
+  register: current_tldr_version
+  changed_when: false
+  failed_when: false
+
+- name: "Tldr | Show current_tldr_version debug"
+  ansible.builtin.debug:
+    var: current_tldr_version.stdout
+
+- name: "Tldr | Show tldr_latest_release debug"
+  ansible.builtin.debug:
+    var: tldr_latest_release
+
+- name: "Tldr | Install"
+  when:
+    - can_install_packages | default(false)
+    - ansible_facts['machine'] != 'aarch64'
+    - tldr_latest_release != (current_tldr_version.stdout | default(''))
+  block:
+    - name: "Tldr | Downloading Tldr Release"
+      ansible.builtin.get_url:
+        url: "https://github.com/psibi/tldr-hs/releases/download/{{ tldr_latest_release }}/tldr"
+        dest: /tmp/tldr
+        mode: "0755"
+        force: true
+      notify:
+        - Cleanup Tldr downloaded binary
+
+    - name: "Tldr | Remove any current Tldr installations"
+      ansible.builtin.file:
+        path: /usr/local/bin/tldr
+        state: absent
+      become: true
+
+    - name: "Tldr | Install tldr"
+      ansible.builtin.copy:
+        remote_src: true
+        src: /tmp/tldr
+        dest: /usr/local/bin/
+        owner: "{{ host_user }}"
+        group: "{{ host_user }}"
+        force: true
+        mode: "0755"
+      become: true
+      notify:
+        - Cleanup Tldr downloaded binary
