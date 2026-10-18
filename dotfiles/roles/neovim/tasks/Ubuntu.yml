@@ -8,6 +8,24 @@
   failed_when: false
   no_log: true
 
+# The config (nvim-treesitter main, avante) needs Neovim >= neovim_min_version; Ubuntu's own
+# package is older, so an existing but too old nvim counts as missing.
+- name: "Neovim | {{ ansible_facts['distribution'] }} | Read installed nvim version"
+  ansible.builtin.shell: set -o pipefail; nvim --version | head -n 1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'
+  args:
+    executable: /bin/bash
+  register: nvim_installed_version
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: nvim_check.rc == 0
+
+- name: "Neovim | {{ ansible_facts['distribution'] }} | Decide whether nvim needs installing"
+  ansible.builtin.set_fact:
+    nvim_needs_install: >-
+      {{ nvim_check.rc != 0
+         or (nvim_installed_version.stdout | default('0.0.0')) is version(neovim_min_version, '<') }}
+
 - name: "Neovim | {{ ansible_facts['distribution'] }} | Install dependencies"
   ansible.builtin.apt:
     name:
@@ -145,29 +163,49 @@
 - name: "Neovim | {{ ansible_facts['distribution'] }} | System installation"
   when:
     - can_install_packages | default(false)
-    - nvim_check.rc != 0
+    - nvim_needs_install | bool
   block:
-    - name: "Neovim | {{ ansible_facts['distribution'] }} | Add APT Repository"
-      ansible.builtin.apt_repository:
-        repo: ppa:neovim-ppa/unstable
-        state: present
+    # Official stable release, pinned and checksum-verified (the unstable PPA ships dev builds).
+    # /usr/local/bin comes before /usr/bin on PATH, so it wins over Ubuntu's older package.
+    - name: "Neovim | {{ ansible_facts['distribution'] }} | Download release {{ neovim_version }}"
+      ansible.builtin.get_url:
+        url: "https://github.com/neovim/neovim/releases/download/{{ neovim_version }}/nvim-linux-{{ neovim_arch }}.tar.gz"
+        dest: "/tmp/nvim-{{ neovim_version }}-linux-{{ neovim_arch }}.tar.gz"
+        checksum: "sha256:{{ neovim_sha256[neovim_arch] }}"
         mode: "0644"
-      become: true
-      register: nvim_repo_add
 
-    - name: "Neovim | {{ ansible_facts['distribution'] }} | Install from repository"
-      ansible.builtin.apt:
-        name: neovim
-        state: present
-        update_cache: yes
+    - name: "Neovim | {{ ansible_facts['distribution'] }} | Remove previous release directory"
+      ansible.builtin.file:
+        path: "/opt/nvim-linux-{{ neovim_arch }}"
+        state: absent
+      become: true
+
+    - name: "Neovim | {{ ansible_facts['distribution'] }} | Extract to /opt"
+      ansible.builtin.unarchive:
+        src: "/tmp/nvim-{{ neovim_version }}-linux-{{ neovim_arch }}.tar.gz"
+        dest: /opt
+        remote_src: true
+      become: true
+
+    - name: "Neovim | {{ ansible_facts['distribution'] }} | Link nvim into /usr/local/bin"
+      ansible.builtin.file:
+        src: "/opt/nvim-linux-{{ neovim_arch }}/bin/nvim"
+        dest: /usr/local/bin/nvim
+        state: link
+        force: true
       become: true
       register: nvim_system_install
+
+    - name: "Neovim | {{ ansible_facts['distribution'] }} | Remove downloaded archive"
+      ansible.builtin.file:
+        path: "/tmp/nvim-{{ neovim_version }}-linux-{{ neovim_arch }}.tar.gz"
+        state: absent
 
 # User-local installation without sudo
 - name: "Neovim | {{ ansible_facts['distribution'] }} | User-local installation"
   when:
     - not (can_install_packages | default(false))
-    - nvim_check.rc != 0
+    - nvim_needs_install | bool
   block:
     - name: "Neovim | Create local directories"
       ansible.builtin.file:
