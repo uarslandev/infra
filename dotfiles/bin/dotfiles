@@ -101,8 +101,11 @@ cleanup() {
   fi
   # Show cursor
   tput cnorm 2>/dev/null || true
-  # Remove the temp file holding the sudo password (see ask_become_password)
-  [[ -n "${BECOME_VARS_FILE:-}" ]] && rm -f "$BECOME_VARS_FILE"
+  # Remove the temp file holding the sudo password (see ask_become_password). An `if`, not `&&`:
+  # under set -e a false test as the trap's last command turns the script's exit code into 1.
+  if [[ -n "${BECOME_VARS_FILE:-}" ]]; then
+    rm -f "$BECOME_VARS_FILE"
+  fi
 }
 
 # Set trap to cleanup on exit
