@@ -38,6 +38,8 @@ ghelp() {
   echo -e "${BOLD}${GREEN}Quick Commands:${NC}"
   echo -e "  ${YELLOW}gacp${NC} <msg>  - Add all, commit (signed), and push in one command"
   echo -e "  ${YELLOW}gacpgh${NC} <msg>- Same as gacp + create PR, approve, and merge"
+  echo -e "  ${YELLOW}wip${NC} [msg]   - Quick save: add all, commit (msg optional), push current branch (-n: no push)"
+  echo -e "  ${YELLOW}dotsave${NC} [msg]- wip for ~/.dotfiles, from anywhere"
   echo -e "  ${YELLOW}ai-commit${NC}   - Generate commit message using Claude (requires staged changes)"
   echo -e "  ${YELLOW}gtags${NC}       - Interactive tag browser with preview"
   echo ""
@@ -75,6 +77,45 @@ gacpgh() {
   gh pr create --fill
   gh pr review --approve
   gh pr merge -dm
+}
+
+# Quick save: add everything, commit, push the current branch.
+#   wip                  -> message "wip: <host> <date>"
+#   wip fixed tmux bind  -> message "fixed tmux bind"
+#   wip -n ...           -> commit only, no push
+# Still pushes when there is nothing new to commit but unpushed commits exist.
+wip() {
+  local push=1
+  if [[ "$1" == "-n" ]]; then
+    push=0
+    shift
+  fi
+
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || { echo "wip: not inside a git repository" >&2; return 1; }
+  local branch
+  branch=$(git symbolic-ref --quiet --short HEAD) || { echo "wip: detached HEAD, check out a branch first" >&2; return 1; }
+
+  git add -A || return 1
+  if git diff --cached --quiet; then
+    echo "wip: nothing new to commit"
+  else
+    git diff --cached --stat
+    git commit --quiet -m "${*:-wip: $(hostname -s) $(date '+%Y-%m-%d %H:%M')}" || return 1
+    echo "wip: committed on $branch: $(git log -1 --format=%s)"
+  fi
+
+  (( push )) || return 0
+  if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+    git push --quiet || return 1
+  else
+    git push --quiet -u origin "$branch" || return 1
+  fi
+  echo "wip: pushed $branch"
+}
+
+# wip for the dotfiles repo, from any directory.
+dotsave() {
+  (cd "${DOTFILES:-$HOME/.dotfiles}" && wip "$@")
 }
 
 parse_git_branch() {
