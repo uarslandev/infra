@@ -1,4 +1,17 @@
 ---
+# Older one-line .list entries for repos the roles now add as deb822 .sources use
+# another key. apt refuses two Signed-By values for one source and then reads no
+# sources at all, so remove them before the first apt update.
+- name: "System | {{ ansible_facts['distribution'] }} | Remove legacy APT repository files"
+  ansible.builtin.file:
+    path: "/etc/apt/sources.list.d/{{ item }}"
+    state: absent
+  loop:
+    - hashicorp.list
+    - apt_releases_hashicorp_com.list
+  become: true
+  when: can_install_packages | default(false)
+
 - name: "System | {{ ansible_facts['distribution'] }} | Update APT Repos and Upgrade APT Packages"
   ansible.builtin.apt:
     update_cache: true
