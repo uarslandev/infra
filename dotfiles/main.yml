@@ -8,6 +8,9 @@
       extra_args: "{{ arch_pacman_extra_args | default('') }}"
       update_cache_extra_args: "{{ arch_pacman_update_cache_extra_args | default('') }}"
       upgrade_extra_args: "{{ arch_pacman_upgrade_extra_args | default('') }}"
+    # deb822_repository needs python3-debian, which a fresh Ubuntu doesn't ship.
+    ansible.builtin.deb822_repository:
+      install_python_debian: true
 
   pre_tasks:
     - name: Normalize Distribution
