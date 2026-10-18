@@ -21,3 +21,12 @@
 - name: "FZF | Ensure fzf is installed"
   ansible.builtin.shell: "{{ ansible_facts['user_dir'] }}/.fzf/install --all --no-update-rc --no-fish"
   when: not fzf_binary.stat.exists
+
+# --no-update-rc leaves ~/.fzf/bin off PATH, and the dnf fzf was removed above; without this link
+# `fzf` is not found (tmux-sessionizer and other scripts need it). ~/.local/bin is on PATH.
+- name: "FZF | Link fzf into ~/.local/bin"
+  ansible.builtin.file:
+    src: "{{ ansible_facts['user_dir'] }}/.fzf/bin/fzf"
+    dest: "{{ ansible_facts['user_dir'] }}/.local/bin/fzf"
+    state: link
+    force: true

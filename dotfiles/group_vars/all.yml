@@ -25,8 +25,8 @@ default_roles:
   - neovim
   - vscode
   - kitty
+  - fzf  # before tmux: tmux-sessionizer needs fzf
   - tmux
-  - fzf
   - starship
   # === File tools ===
   - bat

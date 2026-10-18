@@ -8,6 +8,18 @@
   ansible.builtin.include_tasks: "{{ ansible_facts['distribution'] }}.yml"
   when: tmux_distribution_config.stat.exists
 
+- name: "Tmux | Ensure ~/.local/bin exists"
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+
+- name: "Tmux | Install tmux-sessionizer"
+  ansible.builtin.copy:
+    src: bin/tmux-sessionizer
+    dest: "{{ ansible_facts['user_dir'] }}/.local/bin/tmux-sessionizer"
+    mode: "0755"
+
 - name: "Tmux | Install TPM"
   ansible.builtin.git:
     repo: https://github.com/tmux-plugins/tpm
