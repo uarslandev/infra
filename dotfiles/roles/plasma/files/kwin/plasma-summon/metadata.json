@@ -11,7 +11,7 @@
     "Id": "plasma-summon",
     "Version": "1.0.0",
     "License": "Apache-2.0",
-    "Website": "https://github.com/uarslandev/dotfiles"
+    "Website": "https://github.com/uarslandev/infra"
   },
   "X-Plasma-API": "javascript",
   "X-Plasma-MainScript": "code/main.js",

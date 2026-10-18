@@ -133,4 +133,4 @@ This role works well with:
 
 ## License
 
-Part of the [dotfiles](https://github.com/uarslandev/dotfiles) project.
+Part of the [dotfiles](https://github.com/uarslandev/infra/tree/main/dotfiles) project.

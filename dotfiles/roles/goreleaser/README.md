@@ -140,4 +140,4 @@ To add support for additional platforms:
 
 ---
 
-**Part of**: [dotfiles](https://github.com/uarslandev/dotfiles) - Ansible-based development environment automation
+**Part of**: [dotfiles](https://github.com/uarslandev/infra/tree/main/dotfiles) - Ansible-based development environment automation

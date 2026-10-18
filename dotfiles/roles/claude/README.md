@@ -268,7 +268,7 @@ claude
 
 ## Installation
 
-This role is part of the [dotfiles](https://github.com/uarslandev/dotfiles) system:
+This role is part of the [dotfiles](https://github.com/uarslandev/infra/tree/main/dotfiles) system:
 
 ```bash
 # Install via dotfiles wrapper (recommended)
@@ -498,6 +498,6 @@ Part of personal dotfiles repository. MIT License.
 
 ---
 
-**Repository**: [uarslandev/dotfiles](https://github.com/uarslandev/dotfiles)
+**Repository**: [uarslandev/infra: dotfiles/](https://github.com/uarslandev/infra/tree/main/dotfiles)
 **Role Path**: `roles/claude`
 **Last Updated**: 2025-11-28

@@ -568,7 +568,7 @@ When modifying this role:
 
 ## License
 
-Part of the [dotfiles](https://github.com/uarslandev/dotfiles) repository. See repository LICENSE for details.
+Part of the [dotfiles](https://github.com/uarslandev/infra/tree/main/dotfiles) repository. See repository LICENSE for details.
 
 ---
 

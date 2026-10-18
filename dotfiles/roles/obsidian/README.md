@@ -172,4 +172,4 @@ Modify the repository URL in `tasks/main.yml`:
 
 ---
 
-**Part of:** [uarslandev/dotfiles](https://github.com/uarslandev/dotfiles)
+**Part of:** [uarslandev/infra: dotfiles/](https://github.com/uarslandev/infra/tree/main/dotfiles)

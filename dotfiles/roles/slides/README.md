@@ -93,4 +93,4 @@ dotfiles
 
 ---
 
-*Part of the [dotfiles](https://github.com/uarslandev/dotfiles) automated development environment setup*
+*Part of the [dotfiles](https://github.com/uarslandev/infra/tree/main/dotfiles) automated development environment setup*

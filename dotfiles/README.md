@@ -1,6 +1,13 @@
 # dotfiles
 
-Ansible-based development environment for **Arch/CachyOS**, **Ubuntu** (WSL + server), and **Fedora**.
+Ansible-based development environment for **Arch/CachyOS**, **Ubuntu** (desktop, WSL, server), and **Fedora**.
+
+This is the `dotfiles/` folder of [uarslandev/infra](https://github.com/uarslandev/infra) (next to the homelab);
+`~/.dotfiles` is a link to it. Set up any machine with:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bin/dotfiles)"
+```
 
 Roles are idempotent and per-distro: each role only runs the tasks that exist for
 the current distribution, so the same playbook works everywhere.
@@ -31,10 +38,10 @@ sudo dnf update -y
 
 ## Quick Start
 
-**Want it fast?** From the repo root:
+**Want it fast?** On a new machine use the `curl` command above. Afterwards, from anywhere:
 
 ```bash
-./bin/dotfiles
+dotfiles
 ```
 
 **What happens:**

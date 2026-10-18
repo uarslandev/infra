@@ -1,12 +1,19 @@
 # CLAUDE.md
 
-This repo (`uarslandev/infra`, public) is **homelab as code**: `homelab.yml`, `inventories/homelab/` (always passed
-with `-i`; `ansible.cfg` sets no default inventory), roles (`common`, `ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`, `node_exporter`,
-`docker_host`, `stacks`, `adguard`, `wireguard`), `stacks/`, `terraform/proxmox/`, `terraform/cloudflare/`, `secrets/`,
-`scripts/homelab/`, `docs/homelab/`. Only run explicitly. Start with `docs/homelab/README.md`.
+This repo (`uarslandev/infra`, public) holds all infrastructure, as two separate Ansible projects:
 
-The dev environment / dotfiles moved to **github.com/uarslandev/dotfiles** (cloned to `~/.dotfiles`). `bin/dotfiles` here
-is only a forwarder that keeps the old `curl | bash` URL working; keep it working. Ask before changing the dotfiles repo.
+1. **Dev environment / dotfiles** (`dotfiles/`, own `main.yml`, `ansible.cfg`, `roles/`, `group_vars/`): installs every
+   tool and its config on Arch, Ubuntu (desktop/WSL/server) and Fedora. Entry point `bin/dotfiles`:
+   `bash -c "$(curl -fsSL https://raw.githubusercontent.com/uarslandev/infra/main/bin/dotfiles)"` must keep working.
+   It clones to `~/Repos/infra` and links `~/.dotfiles` -> `~/Repos/infra/dotfiles` (shell config uses `~/.dotfiles`).
+   New program = new role in `dotfiles/roles/<tool>/` (install tasks + `files/` with its config). Its own notes:
+   `dotfiles/AGENTS.md`. Ask before changing this part.
+2. **Homelab as code**: `homelab.yml`, `inventories/homelab/` (always passed with `-i`; `ansible.cfg` sets no default
+   inventory), roles (`common`, `ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`, `node_exporter`, `docker_host`,
+   `stacks`, `adguard`, `wireguard`), `stacks/`, `terraform/proxmox/`, `terraform/cloudflare/`, `secrets/`,
+   `scripts/homelab/`, `docs/homelab/`. Only run explicitly. Start with `docs/homelab/README.md`.
+
+The two projects never share roles or vars (both have e.g. a `wireguard` role); run dev-env Ansible from `dotfiles/`.
 
 ## Rules
 
