@@ -101,6 +101,8 @@ cleanup() {
   fi
   # Show cursor
   tput cnorm 2>/dev/null || true
+  # Remove the temp file holding the sudo password (see ask_become_password)
+  [[ -n "${BECOME_VARS_FILE:-}" ]] && rm -f "$BECOME_VARS_FILE"
 }
 
 # Set trap to cleanup on exit
@@ -695,7 +697,48 @@ update_ansible_galaxy "$dotfiles_os"
 
 rm -f $VAULT_SECRET_FILE
 _task_done
-ansible-playbook "$DOTFILES_DIR/main.yml" "${REMAINING_ARGS[@]}"
+
+# Without a sudo password every system package is skipped. Ask once and pass it as
+# ansible_become_password through a private temp file (not argv, so it never shows up in `ps`),
+# removed by cleanup(). Only real passwordless sudo skips this: `sudo -k -n` ignores the terminal's
+# cached sudo login, which Ansible (running sudo without a terminal) cannot use.
+ask_become_password() {
+  BECOME_ARGS=()
+  command -v sudo >/dev/null 2>&1 || return 0
+  sudo -k -n true 2>/dev/null && return 0
+  [[ " ${REMAINING_ARGS[*]} " == *" -K "* || " ${REMAINING_ARGS[*]} " == *" --ask-become-pass "* ]] && return 0
+
+  # Ubuntu 25.10+ ships sudo-rs as `sudo`; it wraps Ansible's password prompt so Ansible never sees
+  # it and times out. Classic sudo stays installed as sudo.ws, so Ansible uses that when it exists.
+  local sudo_exe=sudo
+  [[ -x /usr/bin/sudo.ws ]] && sudo_exe=/usr/bin/sudo.ws
+
+  local sudo_pw attempt
+  for attempt in 1 2 3; do
+    read -rsp "[sudo] password for ${USER}: " sudo_pw </dev/tty
+    echo
+    # Same sudo as Ansible; -k so a cached login can't hide a typo.
+    printf '%s\n' "$sudo_pw" | "$sudo_exe" -k -S -p '' true 2>/dev/null && break
+    echo -e "${WARNING} ${CAT_YELLOW}Wrong sudo password.${NC}"
+    if [[ $attempt -eq 3 ]]; then
+      echo -e "${X_MARK} ${CAT_RED}3 wrong attempts, giving up.${NC}"
+      exit 1
+    fi
+  done
+
+  BECOME_VARS_FILE="$(umask 077 && mktemp "${XDG_RUNTIME_DIR:-/tmp}/dotfiles-become.XXXXXX")"
+  printf '%s' "$sudo_pw" | SUDO_EXE="$sudo_exe" python3 -c '
+import json, os, sys
+v = {"ansible_become_password": sys.stdin.read()}
+if os.environ["SUDO_EXE"] != "sudo":
+    v["ansible_become_exe"] = os.environ["SUDO_EXE"]
+print(json.dumps(v))' >"$BECOME_VARS_FILE"
+  unset sudo_pw
+  BECOME_ARGS=(-e "@$BECOME_VARS_FILE")
+}
+
+ask_become_password
+ansible-playbook "$DOTFILES_DIR/main.yml" "${BECOME_ARGS[@]}" "${REMAINING_ARGS[@]}"
 
 popd 2>&1 > /dev/null
 
