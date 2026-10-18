@@ -121,6 +121,9 @@ default_roles:
 
 # REQUIRED: Your name for git commits and configurations
 git_user_name: "Umut Arslan"
+# GitHub noreply address, so commits work without 1Password; the git role uses the vault's email instead
+# when 1Password is unlocked (op.git.user.email).
+git_user_email: "89416489+uarslandev@users.noreply.github.com"
 
 # 1Password CLI account used by pre_tasks and secret-bearing roles.
 # op_account: my.1password.com
