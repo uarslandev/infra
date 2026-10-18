@@ -20,7 +20,7 @@
   hosts: docker_hosts
   tags: [apps]
   vars:
-    can_become: true # input of the shared dev-env `common` role
+    can_become: true # input of the `common` role
   pre_tasks:
     - name: Load SOPS secrets
       community.sops.load_vars:

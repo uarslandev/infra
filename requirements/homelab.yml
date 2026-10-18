@@ -1,5 +1,5 @@
 ---
-# Collections for homelab.yml only (the dev-env bootstrap uses requirements/common.yml).
+# Collections for homelab.yml.
 collections:
   - name: community.general
     version: 13.5.0

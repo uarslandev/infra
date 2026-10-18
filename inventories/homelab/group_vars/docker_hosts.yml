@@ -1,4 +1,10 @@
 ---
+# Inputs of the `common` role: the non-root admin user (facts are gathered with become, so the
+# user comes from SUDO_USER). Moved from the old repo-wide group_vars/all.yml, unchanged.
+target_user: "{{ (ansible_facts['user_id'] | default(ansible_user_id | default('user'))) if ((ansible_facts['user_id'] | default(ansible_user_id | default('user'))) != 'root') else (ansible_facts['env']['SUDO_USER'] | default(ansible_env.SUDO_USER | default(ansible_facts['env']['LOGNAME'] | default(ansible_env.LOGNAME | default('user'))))) }}"
+user_home: "/home/{{ target_user }}"
+user_bin: "{{ user_home }}/.local/bin"
+
 # virtiofs shares from the Proxmox host (tag => mount point). Tags match terraform virtiofs_shares.
 docker_host_virtiofs_mounts:
   immich: /srv/immich

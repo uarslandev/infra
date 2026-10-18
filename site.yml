@@ -1,7 +1,0 @@
----
-# ==============================================================================
-# Master Playbook (dev environment). The homelab is run separately:
-#   make homelab   (see docs/homelab/README.md)
-# ==============================================================================
-- name: Developer environment
-  ansible.builtin.import_playbook: main.yml

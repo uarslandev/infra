@@ -1,5 +1,0 @@
----
-# Host-specific entry point for thinkpad
-- import_playbook: main.yml
-  vars:
-    target_hosts: thinkpad

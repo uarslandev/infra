@@ -1,21 +1,13 @@
 # ==============================================================================
-# Developer Makefile - Automation Shortcuts
+# Homelab Makefile - Automation Shortcuts
+# (The dev environment / dotfiles moved to github.com/uarslandev/dotfiles.)
 # ==============================================================================
 
 .DEFAULT_GOAL := help
-.PHONY: help apply dotfiles check lint sync test homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret tf-backup-state tf-restore-state cf-plan cf-apply cf-restore-state new-deploy-key
+.PHONY: help homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret tf-backup-state tf-restore-state cf-plan cf-apply cf-restore-state new-deploy-key
 
 help:
-	@echo "Infrastructure & Dotfiles Automation"
-	@echo ""
-	@echo "Usage:"
-	@echo "  make apply      Run full setup across current OS"
-	@echo "  make dotfiles   Fast sync: apply dotfiles only via Chezmoi"
-	@echo "  make check      Perform a dry-run check without applying changes"
-	@echo "  make lint       Verify playbook syntax and run ansible-lint"
-	@echo "  make sync       Audit package drift via pkgSync (Arch Linux)"
-	@echo ""
-	@echo "Homelab (run from WSL/Linux with the age key in ~/.config/sops/age/keys.txt):"
+	@echo "Homelab as code (run from WSL/Linux with the age key in ~/.config/sops/age/keys.txt):"
 	@echo "  make tf-plan        Terraform plan (Proxmox VMs/LXCs)"
 	@echo "  make tf-apply       Apply the last saved plan (then updates the encrypted state copy)"
 	@echo "  make tf-restore-state   Restore terraform.tfstate from the encrypted copy (new machine)"
@@ -29,22 +21,6 @@ help:
 	@echo "  make ssh-config     SSH config for all homelab hosts (WSL + Windows) from the inventory"
 	@echo "  make set-secret NAME=cloudflare_dns_api_token   Store a token you have (hidden prompt, no editor)"
 	@echo "  make new-deploy-key NAME=apex_deploy_key COMMENT=homelab-apps-apex   SSH deploy key into sops, prints the .pub"
-
-apply:
-	./bin/dotfiles
-
-dotfiles:
-	./bin/dotfiles --tags dotfiles
-
-check:
-	ansible-playbook main.yml --check
-
-lint:
-	ansible-playbook main.yml --syntax-check
-	ansible-lint main.yml
-
-sync:
-	ansible-playbook sync.yml
 
 # ------------------------------------------------------------------------------
 # Homelab
