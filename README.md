@@ -28,7 +28,7 @@ make homelab-lint                     Before every commit
 
 ```
 ├── homelab.yml                  # Proxmox host, apps VM (Docker + stacks), AdGuard, WireGuard
-├── ansible.cfg                  # Defaults to inventories/homelab
+├── ansible.cfg                  # No default inventory: always -i inventories/homelab (the Makefile does)
 ├── inventories/homelab/         # Homelab inventory + group_vars
 ├── roles/                       # common, ssh_access, proxmox_host, zfs_datasets, sanoid, node_exporter,
 │                                # docker_host, stacks, adguard, wireguard

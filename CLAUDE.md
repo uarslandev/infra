@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-This repo (`uarslandev/infra`, public) is **homelab as code**: `homelab.yml`, `inventories/homelab/` (default
-inventory in `ansible.cfg`), roles (`common`, `ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`, `node_exporter`,
+This repo (`uarslandev/infra`, public) is **homelab as code**: `homelab.yml`, `inventories/homelab/` (always passed
+with `-i`; `ansible.cfg` sets no default inventory), roles (`common`, `ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`, `node_exporter`,
 `docker_host`, `stacks`, `adguard`, `wireguard`), `stacks/`, `terraform/proxmox/`, `terraform/cloudflare/`, `secrets/`,
 `scripts/homelab/`, `docs/homelab/`. Only run explicitly. Start with `docs/homelab/README.md`.
 

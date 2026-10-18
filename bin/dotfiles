@@ -14,11 +14,21 @@ printf '\033[38;2;249;226;175m\033[1m[!]\033[0m %b\n    %s\n' \
     "The dev environment moved to \033[1mgithub.com/uarslandev/dotfiles\033[0m. Forwarding there; next time use:" \
     "bash -c \"\$(curl -fsSL ${NEW_URL})\""
 
+# Machines set up by the old bootstrap have an infra clone in ~/.dotfiles, where the dotfiles repo now
+# belongs. Move it aside (nothing is deleted) so the new bootstrap can clone dotfiles there.
+if git -C "$HOME/.dotfiles" remote get-url origin 2>/dev/null | grep -q "uarslandev/infra"; then
+    backup="$HOME/.dotfiles.infra-old"
+    [ -e "$backup" ] && backup="$backup.$(date +%Y%m%d%H%M%S)"
+    mv "$HOME/.dotfiles" "$backup"
+    printf '%s\n' "    Moved the old infra clone ~/.dotfiles to ${backup/#$HOME/\~} (delete it when you no longer need it)."
+fi
+
 # A local clone wins (no download); otherwise fetch the new bootstrap, which clones to ~/.dotfiles.
-for local_bin in "${DOTFILES_DIR:-}/bin/dotfiles" "$HOME/.dotfiles/bin/dotfiles" "$HOME/Repos/dotfiles/bin/dotfiles"; do
+for local_bin in ${DOTFILES_DIR:+"$DOTFILES_DIR/bin/dotfiles"} "$HOME/.dotfiles/bin/dotfiles" "$HOME/Repos/dotfiles/bin/dotfiles"; do
     if [ -x "$local_bin" ] && [ -f "$(dirname "$local_bin")/../main.yml" ] \
         && grep -q "uarslandev/dotfiles" "$local_bin" 2>/dev/null; then
         exec "$local_bin" "$@"
     fi
 done
-exec bash -c "$(curl -fsSL "$NEW_URL")" dotfiles "$@"
+script="$(curl -fsSL "$NEW_URL")" || { echo "Could not download ${NEW_URL}" >&2; exit 1; }
+exec bash -c "$script" dotfiles "$@"
