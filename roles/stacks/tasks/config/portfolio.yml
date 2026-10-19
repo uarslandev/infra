@@ -1,0 +1,29 @@
+---
+# Portfolio: clone the private repo at the pinned commit (read-only deploy key) so compose can build
+# the static-site image. No data directory: the site is stateless.
+- name: Portfolio | GitHub host key (pinned, no trust-on-first-use)
+  ansible.builtin.copy:
+    content: "github.com {{ portfolio_github_host_key }}\n"
+    dest: "{{ stacks_root }}/portfolio/known_hosts"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Portfolio | Read-only deploy key for the private repo
+  ansible.builtin.copy:
+    content: "{{ portfolio_deploy_key | trim }}\n" # ssh refuses a key without the final newline
+    dest: "{{ stacks_root }}/portfolio/deploy_key"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: Portfolio | Source at the pinned commit
+  ansible.builtin.git:
+    repo: "{{ portfolio_repo }}"
+    dest: "{{ stacks_root }}/portfolio/src"
+    version: "{{ portfolio_version }}"
+    key_file: "{{ stacks_root }}/portfolio/deploy_key"
+    ssh_opts: "-o UserKnownHostsFile={{ stacks_root }}/portfolio/known_hosts -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes"
+    accept_newhostkey: false
+    force: true # the checkout is build input only; local edits are never wanted

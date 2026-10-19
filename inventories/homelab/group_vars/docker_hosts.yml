@@ -24,6 +24,7 @@ stacks_enabled:
   - syncthing
   - monitoring
   - apex
+  - portfolio
 
 # Stacks to stop and remove (data on ZFS is kept).
 stacks_absent:
@@ -47,6 +48,14 @@ apex_mail_from: "noreply@apex.{{ homelab_public_domain }}"
 apex_app_url: "https://apex.{{ homelab_public_domain }}"
 # From https://api.github.com/meta (ssh_keys); pinned so the clone never trusts an unknown host key.
 apex_github_host_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+
+# Portfolio: the personal site (served at the zone root), static Astro site, image built on the VM from this commit of the private repo
+# (read-only deploy key portfolio_deploy_key in secrets/homelab.sops.yml). Upgrade = new commit here, then --tags apps.
+portfolio_repo: git@github.com:uarslandev/portfolio.git
+portfolio_version: dfd748551e7452c9afaa6b50a99adacf8782c32a
+portfolio_uid: 10091 # unprivileged user that runs Caddy in the container
+# From https://api.github.com/meta (ssh_keys); same host as apex, pinned so the clone never trusts an unknown key.
+portfolio_github_host_key: "{{ apex_github_host_key }}"
 
 # Blackbox HTTP checks (alert if a service stops answering).
 monitoring_http_probes:
