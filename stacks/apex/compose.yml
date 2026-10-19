@@ -12,6 +12,13 @@ services:
     pull_policy: never # local image only, built from ./src
     container_name: apex-pocketbase
     user: "${APEX_UID}:${APEX_UID}"
+    environment: # mail settings, read at every start by pb_hooks/smtp_from_env.pb.js
+      APEX_SMTP_HOST: ${APEX_SMTP_HOST}
+      APEX_SMTP_PORT: ${APEX_SMTP_PORT}
+      APEX_SMTP_USERNAME: ${APEX_SMTP_USERNAME}
+      APEX_SMTP_PASSWORD: ${APEX_SMTP_PASSWORD}
+      APEX_MAIL_FROM: ${APEX_MAIL_FROM}
+      APEX_APP_URL: ${APEX_APP_URL}
     read_only: true
     tmpfs: [/tmp]
     volumes:
