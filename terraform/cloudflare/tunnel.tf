@@ -10,6 +10,7 @@ data "cloudflare_zone" "main" {
 
 locals {
   apex_api_hostname = "apex-api.${var.zone_name}"
+  apex_web_hostname = "apex.${var.zone_name}"
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
@@ -39,6 +40,11 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
         service  = "http://127.0.0.1:8090"
       },
       {
+        # APEX website and PWA (stacks/apex, service `web`): static files only, nothing to sign in to.
+        hostname = local.apex_web_hostname
+        service  = "http://127.0.0.1:8091"
+      },
+      {
         service = "http_status:404"
       },
     ]
@@ -48,6 +54,16 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
 resource "cloudflare_dns_record" "apex_api" {
   zone_id = data.cloudflare_zone.main.zone_id
   name    = local.apex_api_hostname
+  type    = "CNAME"
+  content = "${var.tunnel_id}.cfargotunnel.com"
+  proxied = true
+  ttl     = 1 # automatic (required for proxied records)
+  comment = "Managed by Terraform (uarslandev/infra terraform/cloudflare)"
+}
+
+resource "cloudflare_dns_record" "apex_web" {
+  zone_id = data.cloudflare_zone.main.zone_id
+  name    = local.apex_web_hostname
   type    = "CNAME"
   content = "${var.tunnel_id}.cfargotunnel.com"
   proxied = true

@@ -36,7 +36,7 @@ stacks_root: /opt/stacks
 # APEX sync server: image built on the VM from this commit of the private repo (read-only deploy key
 # apex_deploy_key in secrets/homelab.sops.yml). Upgrade = new commit here, then --tags apps.
 apex_repo: git@github.com:uarslandev/apex.git
-apex_version: b8e55e0ba9d38671af3cb3520da752b0f496f797
+apex_version: fade6149ce8d75e850e7271cf6bff0b39d92511a
 apex_uid: 10090 # unprivileged PocketBase user; owns /srv/apex/pb_data
 # APEX mail (sign-up confirmation, password reset). The SMTP key is the secret apex_smtp_password
 # (make set-secret NAME=apex_smtp_password). With apex_smtp_host empty, mail stays off.

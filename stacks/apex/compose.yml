@@ -3,6 +3,7 @@
 # checksums PocketBase). Data: ZFS tank/apex (virtiofs -> /srv/apex).
 # Public: only ^/api/ through the Cloudflare Tunnel (terraform/cloudflare). The admin UI /_/ is LAN/VPN
 # only via Traefik, or an SSH tunnel to 127.0.0.1:8090. Never publish 8090 on all interfaces.
+# The `web` service (website + PWA, static) is public as apex.<domain> through the same tunnel.
 name: apex
 
 services:
@@ -35,6 +36,36 @@ services:
       traefik.http.middlewares.apex-no-cf-ip.headers.customrequestheaders.CF-Connecting-IP: ""
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    cap_drop: [ALL] # non-root on a high port: needs no capabilities
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # apex.<domain>: the website and the PWA at /app/, static files only (website/ in the same repo and commit).
+  # The image is built here too: the first build downloads Flutter and takes several minutes.
+  web:
+    build:
+      context: ./src
+      dockerfile: website/Dockerfile
+    image: apex-web:${APEX_VERSION}
+    pull_policy: never # local image only, built from ./src
+    container_name: apex-web
+    user: "${APEX_UID}:${APEX_UID}"
+    read_only: true
+    tmpfs: [/tmp] # Caddy's state (XDG dirs point here); nothing is kept
+    ports:
+      - "127.0.0.1:8091:8080" # cloudflared (host network) reaches it here
+    networks: [proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.apex-web.rule: Host(`apex-web.${LOCAL_DOMAIN}`)
+      traefik.http.routers.apex-web.middlewares: lan-only@file
+      traefik.http.services.apex-web.loadbalancer.server.port: "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/"]
       interval: 30s
       timeout: 5s
       retries: 3

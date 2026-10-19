@@ -23,8 +23,9 @@ Proxmox VE (boot SSD: OS only)
 
 - **Public access**: Cloudflare Tunnel (`cloudflared` stack, host network). Routes and their DNS records are Terraform
   (`terraform/cloudflare/tunnel.tf`, `make cf-plan && make cf-apply`); that file owns the tunnel's whole route list, so
-  routes added in the dashboard disappear on the next apply. Only public route: `apex-api.<domain>`, paths `^/api/`
-  (APEX sync API; superuser sign-in is blocked there too). Admin UIs are never routed through it.
+  routes added in the dashboard disappear on the next apply. Public routes: `apex-api.<domain>`, paths `^/api/`
+  (APEX sync API; superuser sign-in is blocked there too), and `apex.<domain>` (APEX website + PWA, static files).
+  Admin UIs are never routed through it.
 - **LAN names**: `https://<name>.home.<domain>` (photos, cloud, media, grafana, syncthing, proxmox, adguard, traefik).
   AdGuard resolves `*.home.<domain>` to the apps VM (rewrites managed in `inventories/homelab/group_vars/adguard.yml`);
   Traefik terminates TLS with a Let's Encrypt wildcard cert (DNS-01 via Cloudflare) and routes by Docker labels.
@@ -77,7 +78,10 @@ Traefik strips that header from LAN requests; other containers on the `proxy` ne
 it only skews rate limits and logged IPs).
 
 - Upgrade: set `apex_version` to the new commit, run `--tags apps` (new tag = new build).
-- LAN: `https://apex.home.<domain>` (API + admin UI). Public: `https://apex-api.<domain>/api/` only.
+- LAN: `https://apex.home.<domain>` (API + admin UI), `https://apex-web.home.<domain>` (website). Public:
+  `https://apex-api.<domain>/api/` only, and `https://apex.<domain>` (service `web`: website + PWA at `/app/`, static files
+  served by Caddy, built from `website/` of the same commit; the first build downloads Flutter, several minutes).
+- Website: the imprint and privacy policy placeholders must be filled in the APEX repo, or the `web` build stops.
 - Admin from outside: WireGuard, or `ssh -L 8090:127.0.0.1:8090 apps`, then `http://127.0.0.1:8090/_/`.
 - First admin: while none exists, PocketBase prints a one-time `/_/#/pbinstall/...` link in `sudo docker logs apex-pocketbase`
   (restart the container for a fresh one). Open it through the SSH tunnel (replace `0.0.0.0` with `127.0.0.1`) and set
