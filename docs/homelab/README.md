@@ -48,6 +48,8 @@ Proxmox VE (boot SSD: OS only)
 
 ## Day-to-day
 
+New to this? [how-deploys-work.md](how-deploys-work.md) walks through deploys, secrets and adding an app.
+
 Run from WSL/Linux in the repo root (needs `~/.config/sops/age/keys.txt`):
 
 ```bash
