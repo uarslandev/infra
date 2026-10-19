@@ -13,6 +13,7 @@ docker_host_virtiofs_mounts:
   syncthing: /srv/syncthing
   appdata: /srv/appdata
   apex: /srv/apex
+  forge: /srv/forge
 
 # Stacks deployed from stacks/<name>/compose.yml, in this order.
 stacks_enabled:
@@ -25,6 +26,7 @@ stacks_enabled:
   - monitoring
   - apex
   - portfolio
+  - forge
 
 # Stacks to stop and remove (data on ZFS is kept).
 stacks_absent:
@@ -56,6 +58,15 @@ portfolio_version: 8cdbef6ab3a647ef286a58f135d02b40a217583c
 portfolio_uid: 10091 # unprivileged user that runs Caddy in the container
 # From https://api.github.com/meta (ssh_keys); same host as apex, pinned so the clone never trusts an unknown key.
 portfolio_github_host_key: "{{ apex_github_host_key }}"
+
+# FORGE: full-stack training app (Postgres + Fastify + nginx/PWA), images built on the VM from this commit
+# of the private repo (read-only deploy key forge_deploy_key in secrets/homelab.sops.yml).
+# Secrets forge_postgres_password + forge_jwt_secret are also in SOPS. Upgrade = new commit here, then --tags apps.
+forge_repo: git@github.com:uarslandev/forge.git
+forge_version: 54d064c6277c63ef5871810cc92028dc1a3e4135
+forge_uid: 10092 # reserved for the stack; the web/api run as the image defaults
+forge_postgres_uid: 70 # postgres:16-alpine runs the server as uid 70; owns /srv/forge/db
+forge_github_host_key: "{{ apex_github_host_key }}"
 
 # Blackbox HTTP checks (alert if a service stops answering).
 monitoring_http_probes:

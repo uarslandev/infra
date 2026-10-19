@@ -1,0 +1,94 @@
+# FORGE (forge.<domain>): full-stack training app — Postgres + Fastify API + nginx/PWA. The images are built
+# on this host from a pinned commit of the private uarslandev/forge repo (cloned to ./src by
+# roles/stacks/tasks/config/forge.yml). DB data on ZFS tank/forge (virtiofs -> /srv/forge).
+# Public: only the `web` service (static PWA + /api proxied to the backend internally) as forge.<domain>
+# through the Cloudflare Tunnel (terraform/cloudflare). The DB and API are never published.
+name: forge
+
+services:
+  forge-db:
+    image: postgres:16-alpine
+    container_name: forge-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Keep the cluster files in a fixed subdir so the bind mount root can be owned simply.
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - /srv/forge/db:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  forge-backend:
+    build:
+      context: ./src/backend
+    image: forge-backend:${FORGE_VERSION}
+    pull_policy: never
+    container_name: forge-backend
+    environment:
+      NODE_ENV: production
+      COOKIE_SECURE: "true" # behind the Cloudflare Tunnel (HTTPS); refresh cookie is HTTPS-only
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@forge-db:5432/${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: 8000
+      FORGE_VERSION: ${FORGE_VERSION}
+      # Same-origin in production: the web container proxies /api, so the browser only ever calls its own origin.
+      CORS_ORIGINS: ${FORGE_PUBLIC_URL}
+    depends_on:
+      forge-db:
+        condition: service_healthy
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  forge-web:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile.web
+      args:
+        VITE_API_URL: /api/v1
+        VITE_APP_VERSION: ${FORGE_VERSION}
+    image: forge-web:${FORGE_VERSION}
+    pull_policy: never
+    container_name: forge-web
+    depends_on:
+      forge-backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8093:80" # cloudflared (host network) reaches it here
+    networks: [internal, proxy]
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.forge.rule: Host(`forge.${LOCAL_DOMAIN}`)
+      traefik.http.routers.forge.middlewares: lan-only@file
+      traefik.http.services.forge.loadbalancer.server.port: "80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+networks:
+  # Private network for db <-> backend <-> web; not reachable from other stacks.
+  internal:
+  # Shared reverse-proxy network; only forge-web joins it.
+  proxy:
+    external: true

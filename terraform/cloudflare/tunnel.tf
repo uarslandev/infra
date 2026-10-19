@@ -12,6 +12,7 @@ locals {
   apex_api_hostname  = "apex-api.${var.zone_name}"
   apex_web_hostname  = "apex.${var.zone_name}"
   portfolio_hostname = var.zone_name
+  forge_hostname     = "forge.${var.zone_name}"
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
@@ -51,6 +52,11 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
         service  = "http://127.0.0.1:8092"
       },
       {
+        # FORGE (stacks/forge, service `web`): the PWA with /api proxied to the backend inside the stack.
+        hostname = local.forge_hostname
+        service  = "http://127.0.0.1:8093"
+      },
+      {
         service = "http_status:404"
       },
     ]
@@ -80,6 +86,16 @@ resource "cloudflare_dns_record" "apex_web" {
 resource "cloudflare_dns_record" "portfolio" {
   zone_id = data.cloudflare_zone.main.zone_id
   name    = local.portfolio_hostname # the zone root; Cloudflare flattens the proxied CNAME
+  type    = "CNAME"
+  content = "${var.tunnel_id}.cfargotunnel.com"
+  proxied = true
+  ttl     = 1 # automatic (required for proxied records)
+  comment = "Managed by Terraform (uarslandev/infra terraform/cloudflare)"
+}
+
+resource "cloudflare_dns_record" "forge" {
+  zone_id = data.cloudflare_zone.main.zone_id
+  name    = local.forge_hostname
   type    = "CNAME"
   content = "${var.tunnel_id}.cfargotunnel.com"
   proxied = true

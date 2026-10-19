@@ -25,6 +25,7 @@ virtiofs_shares = {
   syncthing = "/tank/syncthing"
   appdata   = "/tank/appdata"
   apex      = "/tank/apex"
+  forge     = "/tank/forge"
 }
 
 containers = {

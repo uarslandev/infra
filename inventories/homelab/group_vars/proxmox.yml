@@ -7,6 +7,7 @@ zfs_datasets_list:
   - name: tank/syncthing
   - name: tank/appdata
   - name: tank/apex
+  - name: tank/forge
 
 # sanoid retention per dataset (template name => counts).
 sanoid_templates:
@@ -19,6 +20,7 @@ sanoid_datasets:
   tank/nextcloud: critical
   tank/appdata: standard
   tank/apex: standard
+  tank/forge: standard
   tank/syncthing: standard
   tank/jellyfin: media
 

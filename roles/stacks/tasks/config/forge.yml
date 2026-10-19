@@ -1,0 +1,39 @@
+---
+# FORGE: clone the private repo at the pinned commit (read-only deploy key) so compose can build the
+# backend and web images, and prepare the Postgres data directory on tank/forge.
+- name: FORGE | GitHub host key (pinned, no trust-on-first-use)
+  ansible.builtin.copy:
+    content: "github.com {{ forge_github_host_key }}\n"
+    dest: "{{ stacks_root }}/forge/known_hosts"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: FORGE | Read-only deploy key for the private repo
+  ansible.builtin.copy:
+    content: "{{ forge_deploy_key | trim }}\n" # ssh refuses a key without the final newline
+    dest: "{{ stacks_root }}/forge/deploy_key"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: FORGE | Source at the pinned commit
+  ansible.builtin.git:
+    repo: "{{ forge_repo }}"
+    dest: "{{ stacks_root }}/forge/src"
+    version: "{{ forge_version }}"
+    key_file: "{{ stacks_root }}/forge/deploy_key"
+    ssh_opts: "-o UserKnownHostsFile={{ stacks_root }}/forge/known_hosts -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes"
+    accept_newhostkey: false
+    force: true # the checkout is build input only; local edits are never wanted
+
+# The postgres:16-alpine image runs the server as its own uid 70; the data dir
+# on the bind mount must be writable by it or initdb fails on first boot.
+- name: FORGE | Postgres data directory on tank/forge (owned by the container's postgres uid)
+  ansible.builtin.file:
+    path: /srv/forge/db
+    state: directory
+    owner: "{{ forge_postgres_uid }}"
+    group: "{{ forge_postgres_uid }}"
+    mode: "0700"
