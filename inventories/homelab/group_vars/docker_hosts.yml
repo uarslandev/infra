@@ -41,12 +41,23 @@ stacks_root: /opt/stacks
 apex_repo: git@github.com:uarslandev/apex.git
 apex_version: 8c161e3643668f17963eb7c4ff4bcd352a82bdb7
 apex_uid: 10090 # unprivileged PocketBase user; owns /srv/apex/pb_data
-# APEX mail (sign-up confirmation, password reset). The SMTP key is the secret apex_smtp_password
-# (make set-secret NAME=apex_smtp_password). With apex_smtp_host empty, mail stays off.
-apex_smtp_host: ""
+# APEX mail (sign-up confirmation, password reset). Gmail SMTP with an app
+# password, the same arrangement as the alert mail below. The key is the secret
+# apex_smtp_password (make set-secret NAME=apex_smtp_password); an app password
+# needs 2-Step Verification on the Google account.
+#
+# The host stays empty until that secret exists, so the server is never left
+# accepting sign-ups it cannot confirm: pb_hooks/smtp_from_env.pb.js turns SMTP
+# on whenever the host is set, password or not.
+#
+# The sender is the Gmail account itself, not noreply@apex.<domain>: Gmail only
+# sends as an address verified under "Send mail as", and there is no mailbox at
+# the apex subdomain to receive the verification code. Worth revisiting with a
+# transactional provider on the real domain before a public release.
+apex_smtp_host: "{{ 'smtp.gmail.com' if apex_smtp_password is defined else '' }}"
 apex_smtp_port: 587
-apex_smtp_username: ""
-apex_mail_from: "noreply@apex.{{ homelab_public_domain }}"
+apex_smtp_username: uarslandev@gmail.com
+apex_mail_from: uarslandev@gmail.com
 apex_app_url: "https://apex.{{ homelab_public_domain }}"
 # From https://api.github.com/meta (ssh_keys); pinned so the clone never trusts an unknown host key.
 apex_github_host_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
