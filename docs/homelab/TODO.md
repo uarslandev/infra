@@ -25,6 +25,13 @@ Open work, most important first. Done items move to the bottom with a date.
 
 ## Done
 
+- 2026-10-20: portfolio stack (uarslan.com) — static Astro site built on the VM from a pinned commit of the
+  private `portfolio` repo (read-only deploy key), Caddy on 127.0.0.1:8092, tunnel route for the zone root +
+  DNS in Terraform. Imported the pre-existing `apex_web` DNS record into Terraform state (drift fix).
+- 2026-10-20: forge stack (forge.<domain>) — full-stack app (Postgres + Fastify + nginx/PWA) built on the VM
+  from a pinned commit of the private `forge` repo; DB on a new `tank/forge` ZFS dataset (sanoid standard) via
+  a new virtiofs share (apps VM updated in-place + rebooted); only the web service public, /api proxied
+  internally; tunnel route + DNS in Terraform; secrets forge_deploy_key/postgres_password/jwt_secret in SOPS.
 - 2026-10-15: rebuilt as code (Terraform VM/LXCs on Ubuntu 26.04, Ansible roles, SOPS secrets), Immich + Nextcloud migrated.
 - 2026-10-15: monitoring (Prometheus, Alertmanager -> e-mail, Grafana), key-only SSH + recovery key, Renovate config.
 - 2026-10-16: Traefik with Let's Encrypt wildcard for `*.home.<domain>`, AdGuard rewrites as code, NPM retired.
