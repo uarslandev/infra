@@ -54,7 +54,7 @@ apex_github_host_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKL
 # Portfolio: the personal site (served at the zone root), static Astro site, image built on the VM from this commit of the private repo
 # (read-only deploy key portfolio_deploy_key in secrets/homelab.sops.yml). Upgrade = new commit here, then --tags apps.
 portfolio_repo: git@github.com:uarslandev/portfolio.git
-portfolio_version: ef0c55b1a6dcedae608b16ab3db7d8b806feda4a
+portfolio_version: 0b9809bacf10fe616bcd9eb7c162dc13bc8aefcf
 portfolio_uid: 10091 # unprivileged user that runs Caddy in the container
 # From https://api.github.com/meta (ssh_keys); same host as apex, pinned so the clone never trusts an unknown key.
 portfolio_github_host_key: "{{ apex_github_host_key }}"
