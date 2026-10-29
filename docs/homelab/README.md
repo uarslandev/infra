@@ -78,6 +78,8 @@ Traefik strips that header from LAN requests; other containers on the `proxy` ne
 it only skews rate limits and logged IPs).
 
 - Upgrade: set `apex_version` to the new commit, run `--tags apps` (new tag = new build).
+- Before an upgrade that changes the database: `make apex-backup` (stops PocketBase for a few seconds, archives
+  `/srv/apex/pb_data` to `/var/backups/apex/` on the VM, root-only, and always starts it again).
 - LAN: `https://apex.home.<domain>` (API + admin UI), `https://apex-web.home.<domain>` (website). Public:
   `https://apex-api.<domain>/api/` only, and `https://apex.<domain>` (service `web`: website + PWA at `/app/`, static files
   served by Caddy, built from `website/` of the same commit; the first build downloads Flutter, several minutes).

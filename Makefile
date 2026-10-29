@@ -3,7 +3,7 @@
 # ==============================================================================
 
 .DEFAULT_GOAL := help
-.PHONY: help dotfiles dotfiles-check dotfiles-lint homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret tf-backup-state tf-restore-state cf-plan cf-apply cf-restore-state new-deploy-key
+.PHONY: help dotfiles dotfiles-check dotfiles-lint homelab homelab-check tf-plan tf-apply homelab-lint new-stack secret ssh-config set-secret tf-backup-state tf-restore-state cf-plan cf-apply cf-restore-state new-deploy-key apex-backup
 
 help:
 	@echo "Dev environment (this machine; project in dotfiles/):"
@@ -25,6 +25,7 @@ help:
 	@echo "  make ssh-config     SSH config for all homelab hosts (WSL + Windows) from the inventory"
 	@echo "  make set-secret NAME=cloudflare_dns_api_token   Store a token you have (hidden prompt, no editor)"
 	@echo "  make new-deploy-key NAME=apex_deploy_key COMMENT=homelab-apps-apex   SSH deploy key into sops, prints the .pub"
+	@echo "  make apex-backup     Consistent PocketBase backup on the apps VM (a few seconds of downtime)"
 
 # ------------------------------------------------------------------------------
 # Dev environment
@@ -103,3 +104,6 @@ tf-backup-state:
 
 tf-restore-state:
 	scripts/homelab/tfstate.sh restore
+
+apex-backup:
+	scripts/homelab/apex-backup.sh
