@@ -46,4 +46,22 @@ require("copilot").setup({
 		markdown = true,
 		help = true,
 	},
+	-- infra: never send secrets to Copilot. `sops edit` opens decrypted files from a temp dir.
+	should_attach = function(buf_id, bufname)
+		if not vim.bo[buf_id].buflisted or vim.bo[buf_id].buftype ~= "" then
+			return false
+		end
+		local path = vim.fs.normalize(bufname or "")
+		local tmp = vim.fs.normalize(vim.env.TMPDIR or "/tmp")
+		local blocked = { "%.sops%.", "%.env$", "/%.env%.", "%.tfvars$", "%.tfstate", "kubeconfig", "%.agekey$", "/%.ssh/" }
+		if path:sub(1, #tmp + 1) == tmp .. "/" or path:sub(1, 5) == "/tmp/" then
+			return false
+		end
+		for _, pattern in ipairs(blocked) do
+			if path:find(pattern) then
+				return false
+			end
+		end
+		return true
+	end,
 })

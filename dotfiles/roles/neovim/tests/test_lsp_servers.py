@@ -6,7 +6,7 @@ import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 BUN_DEFAULTS = REPO_ROOT / "roles" / "bun" / "defaults" / "main.yml"
-NVIM_LSP = REPO_ROOT / "roles" / "neovim" / "files" / "lua" / "plugins" / "lsp.lua"
+NVIM_LSP = REPO_ROOT / "roles" / "neovim" / "files" / "lua" / "craftzdog" / "plugins" / "lsp.lua"
 
 BUN_PACKAGE_TO_LSP_SERVER = {
     "@ansible/ansible-language-server": "ansiblels",
@@ -17,12 +17,21 @@ BUN_PACKAGE_TO_LSP_SERVER = {
     "graphql-language-service-cli": "graphql",
     "pyright": "pyright",
     "svelte-language-server": "svelte",
-    "typescript-language-server": "ts_ls",
     "yaml-language-server": "yamlls",
+    "vscode-langservers-extracted": "cssls",
 }
 
 BUN_PACKAGES_WITHOUT_LSP_SERVER = {
     "typescript",
+    # Neovim serves TypeScript with vtsls instead of ts_ls.
+    "typescript-language-server",
+    # Installed for other editors and CLIs; not enabled in Neovim.
+    "@biomejs/biome",
+    "@olrtg/emmet-language-server",
+    "@prisma/language-server",
+    "@vue/language-server",
+    "intelephense",
+    "vim-language-server",
 }
 
 
@@ -49,11 +58,13 @@ def _extract_bun_global_packages(defaults_text: str) -> list[str]:
 
 
 def _extract_neovim_lsp_servers(lsp_text: str) -> set[str]:
-    match = re.search(r"local\s+lsp_servers\s*=\s*{(?P<body>.*?)\n}", lsp_text, re.DOTALL)
-    if match is None:
-        raise AssertionError("Could not find local lsp_servers table")
+    """Servers in the `local lsp_servers` table plus every `vim.lsp.enable({...})` list."""
+    bodies = re.findall(r"local\s+lsp_servers\s*=\s*{(.*?)\n}", lsp_text, re.DOTALL)
+    bodies += re.findall(r"vim\.lsp\.enable\(\s*{(.*?)}\s*\)", lsp_text, re.DOTALL)
+    if not bodies:
+        raise AssertionError("Could not find any enabled LSP servers")
 
-    return set(re.findall(r'"([^"]+)"', match.group("body")))
+    return {name for body in bodies for name in re.findall(r'"([^"]+)"', body)}
 
 
 class NeovimLspServerTests(unittest.TestCase):

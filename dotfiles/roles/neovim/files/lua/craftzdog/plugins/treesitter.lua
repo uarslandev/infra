@@ -43,6 +43,14 @@ local ensure_installed = {
 	"vimdoc",
 	"xml",
 	"yaml",
+	-- infra: our languages on top of craftzdog's list
+	"dockerfile",
+	"gomod",
+	"gosum",
+	"hcl",
+	"terraform",
+	"make",
+	"ruby",
 }
 
 local function install_parsers()
