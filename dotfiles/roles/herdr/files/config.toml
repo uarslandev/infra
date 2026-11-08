@@ -39,6 +39,13 @@ description = "open repository GitHub dashboard"
 width = "90%"
 height = "90%"
 
+# From craftzdog's herdr config (his key is prefix+g, which is our goto)
+[[keys.command]]
+key = "prefix+shift+g"
+type = "pane"
+command = 'cd "$HERDR_ACTIVE_PANE_CWD" && lazygit'
+description = "open lazygit in a new pane"
+
 [ui]
 show_agent_labels_on_pane_borders = true
 pane_gaps = false

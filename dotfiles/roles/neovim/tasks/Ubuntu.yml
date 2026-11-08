@@ -8,7 +8,7 @@
   failed_when: false
   no_log: true
 
-# The config (nvim-treesitter main, avante) needs Neovim >= neovim_min_version; Ubuntu's own
+# The config (vim.pack, nvim-treesitter main) needs Neovim >= neovim_min_version; Ubuntu's own
 # package is older, so an existing but too old nvim counts as missing.
 - name: "Neovim | {{ ansible_facts['distribution'] }} | Read installed nvim version"
   ansible.builtin.shell: set -o pipefail; nvim --version | head -n 1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+'

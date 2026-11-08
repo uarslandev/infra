@@ -26,3 +26,6 @@ keys.txt
 
 # Claude Code personal settings
 .claude/settings.local.json
+
+# Private Neovim overrides (loaded by the neovim role if present)
+dotfiles/roles/neovim/files/lua/craftzdog/plugins/local.lua

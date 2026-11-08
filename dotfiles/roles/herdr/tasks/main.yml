@@ -19,3 +19,15 @@
     dest: "{{ ansible_facts['user_dir'] }}/.config/herdr/config.toml"
     src: "config.toml"
     mode: "0644"
+
+- name: "Herdr | Ensure ~/.local/bin exists"
+  ansible.builtin.file:
+    path: "{{ ansible_facts['user_dir'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+
+- name: "Herdr | Install ide pane layout script"
+  ansible.builtin.copy:
+    src: bin/ide
+    dest: "{{ ansible_facts['user_dir'] }}/.local/bin/ide"
+    mode: "0755"
