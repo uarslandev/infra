@@ -41,7 +41,7 @@ No AI chat runs inside Neovim. The agent (Claude Code, Codex, ...) runs in a
    - `<leader>dv`: full review in CodeDiff (file tree plus side-by-side diff).
      `<leader>dh` / `<leader>dH`: history of this file / the whole repo.
    - `;h`: pick a changed hunk. `<leader>gh` / `<leader>gs`: stage a hunk / the whole buffer.
-   - `;g`: lazygit (files opened from it land back in your pane). In herdr, `prefix+shift+g` opens
+   - `;g`: lazygit (files opened from it land back in your pane). In herdr, `prefix+alt+g` opens
      lazygit in its own pane.
 
 The same loop works for katas and LeetCode: keep the problem in a local file, write your solution in

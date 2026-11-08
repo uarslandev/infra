@@ -39,9 +39,9 @@ description = "open repository GitHub dashboard"
 width = "90%"
 height = "90%"
 
-# From craftzdog's herdr config (his key is prefix+g, which is our goto)
+# From craftzdog's herdr config (his prefix+g is our goto; prefix+shift+g is herdr's new_worktree)
 [[keys.command]]
-key = "prefix+shift+g"
+key = "prefix+alt+g"
 type = "pane"
 command = 'cd "$HERDR_ACTIVE_PANE_CWD" && lazygit'
 description = "open lazygit in a new pane"
