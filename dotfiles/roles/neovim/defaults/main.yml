@@ -1,5 +1,5 @@
 ---
-# Oldest Neovim the config works with (nvim-treesitter `main` and avante.nvim need 0.12).
+# Oldest Neovim the config works with (plugins are managed by the built-in `vim.pack`, new in 0.12).
 neovim_min_version: "0.12.0"
 
 # Pinned stable release installed to /opt on Ubuntu when nvim is missing or older than the minimum.

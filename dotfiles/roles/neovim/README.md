@@ -1,338 +1,94 @@
-# 🚀 Neovim Role
+# Neovim Role
 
-A comprehensive Ansible role that transforms Neovim into a modern, feature-rich IDE with AI integration, LSP support, and intelligent cross-platform installation.
+Installs Neovim (>= 0.12) and links `~/.config/nvim` to this role's `files/` directory.
 
-## Overview
+The config is [craftzdog's (devaslife)](https://github.com/craftzdog/dotfiles/tree/master/dot_config/nvim)
+Neovim setup, copied from upstream commit `7c50fa7`. It changes very little, and every change is marked
+with an `infra:` comment:
 
-This role provides a battle-tested Neovim configuration optimized for software development across multiple languages and platforms. It features automatic plugin management via [lazy.nvim](https://github.com/folke/lazy.nvim), complete LSP integration via [Mason](https://github.com/mason-org/mason.nvim), and AI-powered assistance through GitHub Copilot and Claude Code integration.
+- **More languages.** Go, Python, Bash, YAML, Ansible, Terraform, Docker, JSON, PowerShell, Ruby,
+  Astro, GraphQL and Svelte language servers and parsers, on top of his TS/Lua/Rust/CSS/Tailwind list.
+  TypeScript uses his `vtsls`, not `ts_ls`.
+- **POSIX lazygit command.** His lazygit "open file in the pane it came from" command is written for fish;
+  ours is POSIX sh, so it works under zsh/bash.
+- **`lua/infra/filetypes.lua`.** Ansible YAML detection (by path and content), Terraform vars and justfiles.
 
-**Key Highlights:**
-- 🎯 **35+ curated plugins** for development productivity
-- 🔧 **LSP integration** with 15+ pre-configured language servers
-- 🤖 **AI assistance** via Copilot and Claude Code (Avante)
-- 🎨 **Modern UI** with Telescope, Neo-tree, and custom statusline
-- 📦 **Automatic fallback** installation when sudo is unavailable
-- 🔄 **Idempotent** and fully reversible with clean uninstall
+To pull in a newer upstream version, diff `files/` against his `dot_config/nvim/` and keep the
+`infra:` blocks.
 
-## Supported Platforms
+## Plugins and pinning
 
-| Platform | Installation Method | Notes |
-|----------|-------------------|-------|
-| **macOS** | Homebrew | Installs latest stable version |
-| **Ubuntu/Debian** | APT (unstable PPA) | Falls back to AppImage without sudo |
-| **Fedora/RHEL** | DNF | Falls back to AppImage without sudo |
-| **Arch Linux** | AUR | Installs `neovim-git` (nightly) |
+Plugins are managed by Neovim's built-in `vim.pack` (no lazy.nvim). They are listed in
+`lua/craftzdog/plugins/init.lua`, and `nvim-pack-lock.json` pins each one to an exact commit.
+Commit that lockfile whenever it changes.
 
-## What Gets Installed
+- Update: `:lua vim.pack.update()`, review the changes, `:w` to apply, then commit `nvim-pack-lock.json`.
+- Language servers, formatters and linters: Mason (`:Mason`), installed on first start.
+- Copilot: run `:Copilot auth` once (needs a GitHub Copilot subscription).
 
-### Core Components
+## The agentic workflow
 
-**Neovim Binary:**
-- System-wide installation when sudo is available
-- User-local AppImage installation (`~/.local/bin/nvim`) when sudo is unavailable
-- Automatic vim symlink for compatibility
+No AI chat runs inside Neovim. The agent (Claude Code, Codex, ...) runs in a
+[herdr](https://herdr.dev/) pane next to Neovim, and you use Neovim to steer it and review what it changed.
 
-**Dependencies:**
-- `cmake`, `curl`, `pkg-config`, `libtool`, `unzip`
-- `tree-sitter-cli` plus a working C compiler toolchain for parser bootstrap
-- `ripgrep` (essential for Telescope fuzzy finding)
-- `ansible-lint` (for Ansible development)
+1. Open the project in herdr with Neovim on the left and the agent on the right.
+2. Run `ide` (installed by the `herdr` role) in the agent pane: it keeps Neovim on top and adds
+   three small shells below it, for tests, a watcher and git.
+3. Point the agent at code: `<leader>yf` copies `path:line` and visual `<leader>cc` copies the selection
+   as a fenced code block, ready to paste into the agent.
+4. Review its changes:
+   - `<leader>gd`: overlay the diff in the current buffer (mini.diff). `]c` / `[c` jump between hunks.
+   - `<leader>dv`: full review in CodeDiff (file tree plus side-by-side diff).
+     `<leader>dh` / `<leader>dH`: history of this file / the whole repo.
+   - `;h`: pick a changed hunk. `<leader>gh` / `<leader>gs`: stage a hunk / the whole buffer.
+   - `;g`: lazygit (files opened from it land back in your pane). In herdr, `prefix+shift+g` opens
+     lazygit in its own pane.
 
-**LSP Servers** (auto-installed via Mason):
-```
-gopls, ansiblels, bashls, dockerls, jsonls,
-terraformls, lua_ls, yamlls, cssls, ts_ls,
-pyright, tailwindcss, astro, graphql, svelte, and more
-```
+The same loop works for katas and LeetCode: keep the problem in a local file, write your solution in
+Neovim, run the tests in one of the bottom panes, and ask the agent for hints or a review of your diff.
 
-### Configuration Structure
+## Keys worth knowing
 
-The role symlinks `~/.config/nvim` to the role's `files/` directory:
+Leader is `<Space>`.
 
-```
-~/.config/nvim/
-├── init.lua                    # Entry point with lazy.nvim bootstrap
-├── lazy-lock.json             # Plugin version lockfile
-└── lua/
-    ├── plugins/               # 35+ plugin configurations
-    │   ├── lsp.lua           # LSP, Mason, and completion
-    │   ├── telescope.lua     # Fuzzy finder
-    │   ├── treesitter.lua    # Syntax highlighting + parser bootstrap
-    │   ├── avante.lua        # Claude Code integration
-    │   ├── copilot.lua       # GitHub Copilot
-    │   ├── neo-tree.lua      # File explorer
-    │   └── ...
-    └── user/            # Core configuration
-        └── core/
-            ├── options.lua   # Editor settings
-            ├── keymaps.lua   # Key bindings
-            ├── icons.lua     # UI icons
-            └── utils.lua     # Helper functions
-```
+| Key | Action |
+| --- | --- |
+| `;f` / `;r` | Find files / live grep (snacks picker) |
+| `\\` | Buffers |
+| `;;` | Resume the last picker |
+| `;e` | Diagnostics |
+| `sf` | File explorer (oil, floating) |
+| `ss` / `sv`, `sh/sj/sk/sl` | Split / move between windows |
+| `te`, `<Tab>` / `<S-Tab>` | New tab, next / previous tab |
+| `gd`, `gr`, `gy`, `gI`, `K` | Definition, references, type definition, implementation, hover |
+| `<leader>ca` / `<leader>cr` | Code action / rename |
+| `<leader>f` | Format (format on save is on; `:ToggleFormatter` turns it off for a buffer) |
+| `<C-j>` | Next diagnostic |
+| `<leader>gb` / `<leader>gB` | Blame line / blame buffer |
+| `<C-l>` (insert) | Accept the Copilot suggestion |
 
-## Installation Flow
+Note: the mouse is off, `x` and `<leader>d`/`<leader>c` don't overwrite the yank register, and
+`+`/`-` increment/decrement numbers (his defaults).
 
-```mermaid
-graph TD
-    A[Start Installation] --> B{Check if nvim exists}
-    B -->|Exists| C[Skip installation]
-    B -->|Not found| D{Has sudo access?}
+## Requirements
 
-    D -->|Yes| E[System Installation]
-    E --> E1[Install dependencies<br/>via package manager]
-    E --> E2[Install neovim<br/>via package manager]
-    E --> F[Configure]
-
-    D -->|No| G[User-Local Installation]
-    G --> G1[Create ~/.local directories]
-    G --> G2[Fetch latest release<br/>from GitHub API]
-    G --> G3[Download AppImage<br/>to ~/.local/bin/nvim]
-    G --> G4[Install ripgrep<br/>to ~/.local/bin]
-    G --> F
-
-    F --> H[Backup existing config<br/>if not a symlink]
-    H --> I[Create symlink<br/>~/.config/nvim → role/files]
-    I --> J[Complete]
-
-    C --> F
-```
-
-## Key Features
-
-### 🔌 Plugin Management
-- **lazy.nvim** for efficient lazy-loading
-- Plugins load on-demand (events, commands, filetypes)
-- Version locking with `lazy-lock.json`
-- Automatic installation and updates
-
-### 🧠 Language Server Protocol (LSP)
-- **Mason** for automatic LSP server management
-- Pre-configured servers for 15+ languages
-- Consistent keybindings across all LSP servers:
-  - `gd` - Go to definition
-  - `gr` - Show references (Telescope)
-  - `K` - Hover documentation
-  - `<Leader>ca` - Code actions
-  - `<Leader>rn` - Rename symbol
-  - `<Leader>f` - Format document
-
-### 🔍 Fuzzy Finding (Telescope)
-- Project-wide file search
-- Live grep with ripgrep
-- LSP symbol search
-- Git integration
-- Buffer navigation
-
-### 🤖 AI Integration
-- **GitHub Copilot**: AI-powered code completion
-- **Avante (Claude Code)**: Advanced AI pair programming with Claude
-- Context-aware suggestions
-- Multi-language support
-
-### 🎨 Modern UI
-- **Catppuccin** color scheme with transparency
-- Custom statusline with Git integration
-- **Neo-tree** file explorer with Git status
-- **Oil.nvim** for directory editing
-- **Noice** for enhanced UI elements
-
-### 🔧 Developer Tools
-- **LazyGit** integration (`<Leader>gg`)
-- **Gitsigns** for inline Git blame and hunks
-- **Git Worktree** support for multi-branch workflows
-- **ToggleTerm** for integrated terminal
-- **Harpoon** for quick file navigation
-- **Treesitter** for advanced syntax highlighting with a curated startup-managed parser set
-
-### ⚡ Performance
-- Lazy loading for all plugins
-- Disabled built-in plugins (netrw, gzip, etc.)
-- Optimized startup time
-- Profile with `:Lazy profile`
-
-## Configuration Modes
-
-The configuration supports two display modes via `ConfigMode` in `lua/user/init.lua`:
-
-**Rich Mode (Default):**
-```lua
-ConfigMode = "rich"  -- Nerd Fonts, true color, transparency
-```
-
-**Simple Mode:**
-```lua
-ConfigMode = "simple"  -- 8-color terminals, minimal UI
-```
-
-## Core Settings
-
-### Editor Options
-- **Indentation**: 2 spaces, smart indent
-- **Line numbers**: Relative + absolute
-- **Search**: Smart case-insensitive
-- **Font**: Berkeley Mono Nerd Font
-- **Column guide**: 90 characters
-- **Clipboard**: System clipboard integration
-- **Persistent undo**: Enabled
-
-### Key Bindings
-- **Leader key**: `<Space>`
-- **Window navigation**: `<C-hjkl>` (Tmux-aware)
-- **Buffer switching**: `<S-h>`, `<S-l>`
-- **Quick files**: `<Leader>a` (add), `<Leader>e` (menu) via Harpoon
-- **Fuzzy find**: `<Leader>fs` (files), `<Leader>gs` (grep)
-- **Git**: `<Leader>gg` (LazyGit)
+Installed by this and other roles: `git`, a C compiler, `tree-sitter` CLI, `ripgrep`, `fd`, `lazygit`,
+a Nerd Font and a true-color terminal. `solargraph` (Ruby) only installs once Ruby is present.
 
 ## Usage
 
-### Install the role
 ```bash
-# Install with all other roles
-dotfiles
-
-# Install only neovim role
 dotfiles -t neovim
-
-# Test without applying changes
-dotfiles -t neovim --check
 ```
 
-### First Launch
-On first launch, Neovim will:
-1. Auto-install lazy.nvim plugin manager
-2. Download and install all 35+ plugins
-3. Install LSP servers via Mason
-4. Load bundled Treesitter queries and install the managed parser set during startup when the `tree-sitter` CLI is available
+The first start installs all plugins, parsers and language servers (a few minutes). The plugins of
+the old lazy.nvim config stay in `~/.local/share/nvim/lazy/` until you delete that folder yourself.
 
-This may take 1-2 minutes. Subsequent launches are near-instant.
+## Tests
 
-### Common Commands
-```vim
-:Lazy              " Plugin manager UI
-:Mason             " LSP server manager
-:checkhealth       " Verify installation
-:LspInfo           " Check LSP server status
-:Telescope         " Fuzzy finder menu
-```
-
-### Update Plugins
-```vim
-:Lazy sync         " Update all plugins
-:Mason             " Update LSP servers
-```
-
-## Dependencies
-
-### External Tools (Required)
-- **ripgrep**: Essential for Telescope searching
-- **fd**: Optional but recommended for faster file finding
-- **git**: Required for plugin management
-- **tree-sitter-cli**: Required for `nvim-treesitter` parser installs on Neovim 0.12+ (Homebrew split this from `tree-sitter`)
-- **C compiler toolchain**: Required to build Tree-sitter parsers (`build-essential`/`gcc`/Xcode CLT depending on OS)
-
-### Optional Dependencies
-- **lazygit**: For visual Git workflows
-- **nerd font**: For icon display (Berkeley Mono recommended)
-- **true color terminal**: For best visual experience
-
-## Troubleshooting
-
-### Plugin Not Loading
-1. Check status: `:Lazy`
-2. Verify lazy loading config (event, cmd, ft)
-3. Manually sync: `:Lazy sync`
-
-### LSP Server Issues
-1. Check installation: `:Mason`
-2. Verify server status: `:LspInfo`
-3. Reinstall server via `:Mason`
-
-### Performance Issues
-1. Profile startup: `:Lazy profile`
-2. Check for synchronous loading
-3. Review autocommands: `:autocmd`
-
-### AppImage Installation (Linux)
-If using user-local installation:
-- Ensure `~/.local/bin` is in your `$PATH`
-- Verify executable: `chmod +x ~/.local/bin/nvim`
-
-## Uninstallation
-
-The role includes a clean uninstall script:
+`tests/test_lsp_servers.py` checks that every language server the `bun` role installs is either
+enabled in Neovim or explicitly listed as not used there:
 
 ```bash
-~/.dotfiles/roles/neovim/uninstall.sh
+python3 roles/neovim/tests/test_lsp_servers.py
 ```
-
-This will:
-1. Remove configuration symlink (with backup if modified)
-2. Clean data directories (`~/.local/share/nvim`, `~/.cache/nvim`)
-3. Optionally remove Neovim binary itself
-
-## Customization
-
-### Add a Plugin
-Create a new file in `files/lua/plugins/<plugin-name>.lua`:
-
-```lua
-return {
-  "author/plugin-name",
-  event = "VeryLazy",  -- Lazy loading trigger
-  config = function()
-    require("plugin-name").setup({
-      -- Configuration here
-    })
-  end,
-}
-```
-
-### Add an LSP Server
-Edit `files/lua/plugins/lsp.lua` and add to `ensure_installed`:
-
-```lua
-ensure_installed = {
-  'new_server',  -- Add your server
-  -- ...
-}
-```
-
-### Modify Keybindings
-Edit `files/lua/user/core/keymaps.lua` for core mappings, or plugin-specific files for plugin keymaps.
-
-### Change Color Scheme
-Edit `files/lua/plugins/color_scheme.lua` to configure Catppuccin or add a new theme.
-
-## Architecture Notes
-
-### Symlink Strategy
-The role symlinks the entire `~/.config/nvim` directory to `roles/neovim/files/`. This means:
-- Configuration stays in version control
-- Updates automatically sync
-- Easy to modify and test changes
-- Clean separation from user modifications
-
-### Backup Strategy
-Existing configurations are automatically backed up with timestamps:
-```
-~/.config/nvim.backup-<epoch>
-```
-
-### Platform Detection
-The role uses Ansible's standard OS detection pattern:
-1. Check for OS-specific task file
-2. Execute OS-appropriate installation
-3. Fall back gracefully when tools are unavailable
-
-## Links
-
-- [Neovim](https://neovim.io/)
-- [lazy.nvim](https://github.com/folke/lazy.nvim)
-- [Mason](https://github.com/mason-org/mason.nvim)
-- [Telescope](https://github.com/nvim-telescope/telescope.nvim)
-- [Catppuccin](https://github.com/catppuccin/nvim)
-- [Avante (Claude Code)](https://github.com/yetone/avante.nvim)
-
----
-
-**Part of the [dotfiles](../../) Ansible automation suite.**
