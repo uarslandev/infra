@@ -1,0 +1,5 @@
+---
+- name: "Mise | MacOSX | Install"
+  community.general.homebrew:
+    name: mise
+    state: present

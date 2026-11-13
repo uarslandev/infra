@@ -41,6 +41,7 @@ default_roles:
   - jj
   - worktrunk
   # === Languages ===
+  - mise  # pinned node/python runtimes, per-project versions
   - python
   - nvm  # Must run before npm
   - npm

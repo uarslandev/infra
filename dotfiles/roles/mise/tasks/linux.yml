@@ -1,0 +1,54 @@
+---
+# Pinned release tarball for Linux; system-wide with sudo, otherwise into ~/.local/bin.
+- name: "Mise | Linux | Read installed version"
+  ansible.builtin.shell: set -o pipefail; mise --version | grep -oE '[0-9]{4}\.[0-9]+\.[0-9]+'
+  args:
+    executable: /bin/bash
+  environment:
+    PATH: "{{ ansible_facts['user_dir'] }}/.local/bin:/usr/local/bin:{{ ansible_facts['env']['PATH'] }}"
+  register: mise_installed_version
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: "Mise | Linux | Install {{ mise_version }}"
+  when: mise_installed_version.stdout != (mise_version | regex_replace('^v', ''))
+  vars:
+    mise_archive: "/tmp/mise-{{ mise_version }}-linux-{{ mise_arch }}.tar.gz"
+    mise_bin_dir: "{{ '/usr/local/bin' if (can_install_packages | default(false)) else ansible_facts['user_dir'] + '/.local/bin' }}"
+  block:
+    - name: "Mise | Linux | Download release"
+      ansible.builtin.get_url:
+        url: "https://github.com/jdx/mise/releases/download/{{ mise_version }}/mise-{{ mise_version }}-linux-{{ mise_arch }}.tar.gz"
+        dest: "{{ mise_archive }}"
+        checksum: "sha256:{{ mise_sha256[mise_arch] }}"
+        mode: "0644"
+
+    - name: "Mise | Linux | Extract"
+      ansible.builtin.unarchive:
+        src: "{{ mise_archive }}"
+        dest: /tmp
+        remote_src: true
+
+    - name: "Mise | Linux | Bin directory"
+      ansible.builtin.file:
+        path: "{{ mise_bin_dir }}"
+        state: directory
+        mode: "0755"
+      become: "{{ can_install_packages | default(false) }}"
+
+    - name: "Mise | Linux | Install binary"
+      ansible.builtin.copy:
+        src: /tmp/mise/bin/mise
+        dest: "{{ mise_bin_dir }}/mise"
+        mode: "0755"
+        remote_src: true
+      become: "{{ can_install_packages | default(false) }}"
+
+    - name: "Mise | Linux | Clean up"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ mise_archive }}"
+        - /tmp/mise

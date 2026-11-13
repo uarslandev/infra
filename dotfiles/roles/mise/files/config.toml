@@ -1,0 +1,10 @@
+# Global runtimes for every shell (linked to ~/.config/mise/config.toml by the mise role).
+# A project overrides them with its own mise.toml, .tool-versions, .nvmrc or .python-version.
+# Upgrade: change a version here, then `dotfiles -t mise` (or `mise install`).
+[tools]
+node = "26.13.1"
+python = "3.14.10"
+
+[settings]
+# Honour .nvmrc / .node-version and .python-version files in projects.
+idiomatic_version_file_enable_tools = ["node", "python"]

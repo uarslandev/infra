@@ -5,7 +5,8 @@
 
 export NVM_DIR="$HOME/.nvm"
 
-if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+# mise manages node when it is installed; these wrappers would shadow its node.
+if (( ! $+commands[mise] )) && [[ -s "$NVM_DIR/nvm.sh" ]]; then
   _dotfiles_load_nvm() {
     unset -f nvm node npm npx pnpm _dotfiles_load_nvm
     source "$NVM_DIR/nvm.sh"
