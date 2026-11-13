@@ -8,7 +8,7 @@ with an `infra:` comment:
 
 - **More languages.** Go, Python, Bash, YAML, Ansible, Terraform, Docker, JSON, PowerShell, Ruby,
   Astro, GraphQL and Svelte language servers and parsers, on top of his TS/Lua/Rust/CSS/Tailwind list.
-  TypeScript uses his `vtsls`, not `ts_ls`.
+  TypeScript uses his `vtsls`, not `ts_ls`. Python gets ruff for linting and formatting next to pyright.
 - **POSIX lazygit command.** His lazygit "open file in the pane it came from" command is written for fish;
   ours is POSIX sh, so it works under zsh/bash.
 - **`lua/infra/filetypes.lua`.** Ansible YAML detection (by path and content), Terraform vars and justfiles.

@@ -108,6 +108,8 @@ require("conform").setup({
 		scss = oxfmtFormatter,
 		["markdown.mdx"] = oxfmtFormatter,
 		lua = { "stylua" },
+		-- infra: Python formatting (pyright only type-checks)
+		python = { "ruff_organize_imports", "ruff_format" },
 		sh = { "shfmt" },
 		fish = { "fish_indent" },
 	},
