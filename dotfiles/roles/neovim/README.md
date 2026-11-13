@@ -49,7 +49,8 @@ Neovim, run the tests in one of the bottom panes, and ask the agent for hints or
 
 ## Keys worth knowing
 
-Leader is `<Space>`.
+Leader is `<Space>`. Press it (or `;`, `s`, `g`, ...) and wait a moment: which-key lists every
+mapping that follows, so you don't have to remember this table.
 
 | Key | Action |
 | --- | --- |

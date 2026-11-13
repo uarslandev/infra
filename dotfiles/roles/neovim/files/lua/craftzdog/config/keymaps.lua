@@ -59,7 +59,13 @@ keymap.set("n", "<leader>yp", function()
 	require("craftzdog.utils.editor").yank_absolute_path_with_line()
 end, { desc = "Yank absolute path with line number" })
 
-keymap.set("v", "<leader>cc", ":<C-u>lua require('craftzdog.utils.editor').copy_as_codeblock()<CR>")
+-- infra: desc so which-key labels it
+keymap.set(
+	"v",
+	"<leader>cc",
+	":<C-u>lua require('craftzdog.utils.editor').copy_as_codeblock()<CR>",
+	{ desc = "Copy selection as code block" }
+)
 
 keymap.set("n", "<leader>j", function()
 	require("craftzdog.utils.editor").open_package_json()

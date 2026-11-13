@@ -171,6 +171,20 @@ require("codediff").setup({
 	},
 })
 
+-- infra: which-key shows what follows a prefix (<leader>, ;, s, g, ...) after a short pause.
+-- Mapping descriptions come from the `desc` fields; the groups below just name the prefixes.
+require("which-key").setup({
+	preset = "helix",
+	delay = 300,
+	spec = {
+		{ "<leader>c", group = "code" },
+		{ "<leader>d", group = "diff" },
+		{ "<leader>g", group = "git" },
+		{ "<leader>y", group = "yank" },
+		{ ";", group = "pick" },
+	},
+})
+
 vim.diagnostic.config({
 	underline = true,
 	update_in_insert = false,

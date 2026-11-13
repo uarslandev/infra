@@ -12,6 +12,8 @@ vim.pack.add({
 	{ src = gh("b0o/incline.nvim") },
 	{ src = gh("esmuellert/codediff.nvim") },
 	{ src = gh("rachartier/tiny-cmdline.nvim") },
+	-- infra: popup listing the mappings after a prefix key such as <leader>
+	{ src = gh("folke/which-key.nvim") },
 	-- Editor
 	{ src = gh("stevearc/conform.nvim") },
 	{ src = gh("nvim-treesitter/nvim-treesitter") },
