@@ -1,0 +1,3 @@
+# Installed into every Python that mise manages (linked to ~/.default-python-packages).
+# The infra scripts (check-secrets, cf-terraform, bootstrap-secrets) need PyYAML.
+pyyaml==6.0.3

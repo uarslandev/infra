@@ -21,6 +21,14 @@
     state: link
     force: true
 
+# mise installs these into every new Python; the task below covers Pythons installed earlier.
+- name: "Mise | Link default Python packages"
+  ansible.builtin.file:
+    src: "{{ role_path }}/files/default-python-packages"
+    dest: "{{ ansible_facts['user_dir'] }}/.default-python-packages"
+    state: link
+    force: true
+
 # Installs the pinned runtimes from the global config; a no-op when they are already there.
 - name: "Mise | Install global runtimes"
   ansible.builtin.command: mise install --yes
@@ -28,4 +36,12 @@
     PATH: "{{ ansible_facts['user_dir'] }}/.local/bin:/usr/local/bin:{{ ansible_facts['env']['PATH'] }}"
   register: mise_install
   changed_when: "'installed 0 tools' not in (mise_install.stdout + mise_install.stderr)"
+  when: not ansible_check_mode
+
+- name: "Mise | Default packages in the global Python"
+  ansible.builtin.command: mise exec -- python -m pip install --disable-pip-version-check -r {{ ansible_facts['user_dir'] }}/.default-python-packages
+  environment:
+    PATH: "{{ ansible_facts['user_dir'] }}/.local/bin:/usr/local/bin:{{ ansible_facts['env']['PATH'] }}"
+  register: mise_python_packages
+  changed_when: "'Successfully installed' in mise_python_packages.stdout"
   when: not ansible_check_mode
