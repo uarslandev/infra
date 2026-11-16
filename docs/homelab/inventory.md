@@ -18,7 +18,7 @@ What existed before the rebuild is summarised under "Removed in the rebuild" bel
 | --- | --- | --- | --- | --- |
 | 110 | VM | apps | Ubuntu 26.04 | Docker host for all stacks (8 cores, 24 GB) |
 | 120 | LXC | adguard | Ubuntu 26.04 | LAN DNS (AdGuard Home v0.107.78) |
-| 121 | LXC | wireguard | Ubuntu 26.04 | WireGuard VPN (5 peers, config restored unchanged) |
+| 121 | LXC | wireguard | Ubuntu 26.04 | WireGuard VPN (5 peers, config restored unchanged) and WGDashboard v4.3.4 (since 2026-11-16; 2 GB for its frontend build) |
 
 ## Stacks on `apps`
 

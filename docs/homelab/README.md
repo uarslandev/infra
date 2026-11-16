@@ -18,7 +18,7 @@ Proxmox VE (boot SSD: OS only)
 ├── VM 110 "apps" (Ubuntu 26.04, Docker)       Terraform + Ansible
 │   └── datasets mounted via virtiofs at /srv/<name>; stacks in /opt/stacks/<name>
 ├── LXC 120 "adguard"   (Ubuntu 26.04)         LAN DNS
-└── LXC 121 "wireguard" (Ubuntu 26.04)         VPN for admin access
+└── LXC 121 "wireguard" (Ubuntu 26.04)         VPN for admin access, managed in WGDashboard
 ```
 
 - **Public access**: Cloudflare Tunnel (`cloudflared` stack, host network). Routes and their DNS records are Terraform
@@ -26,11 +26,12 @@ Proxmox VE (boot SSD: OS only)
   routes added in the dashboard disappear on the next apply. Public routes: `apex-api.<domain>`, paths `^/api/`
   (APEX sync API; superuser sign-in is blocked there too), and `apex.<domain>` (APEX website + PWA, static files).
   Admin UIs are never routed through it.
-- **LAN names**: `https://<name>.home.<domain>` (photos, cloud, media, grafana, syncthing, proxmox, adguard, traefik).
+- **LAN names**: `https://<name>.home.<domain>` (photos, cloud, media, grafana, syncthing, proxmox, adguard, traefik, vpn).
   AdGuard resolves `*.home.<domain>` to the apps VM (rewrites managed in `inventories/homelab/group_vars/adguard.yml`);
   Traefik terminates TLS with a Let's Encrypt wildcard cert (DNS-01 via Cloudflare) and routes by Docker labels.
   Admin UIs are LAN/VPN only (`lan-only` middleware). Old `*.home` names redirect to the new ones.
-- **Admin access from outside**: WireGuard.
+- **Admin access from outside**: WireGuard. Its devices (peers) are managed in WGDashboard at
+  `https://vpn.home.<domain>` (role `wgdashboard`; its port only accepts Traefik).
 - **Monitoring**: Prometheus + Alertmanager + Grafana (`stacks/monitoring`, Grafana on port 3000 of the apps VM,
   user `admin`, password: `sops decrypt --extract '["grafana_admin_password"]' secrets/homelab.sops.yml`).
   Every host runs `prometheus-node-exporter` (ZFS + SMART on the Proxmox host); HTTP/DNS checks via blackbox;
@@ -108,7 +109,7 @@ New device:
 | --- | --- | --- |
 | SSH | `ssh-keygen -t ed25519 -C "<device>"`, then `make ssh-config` | add the `.pub` line to `ssh_access_authorized_keys`, run `make homelab` from a device that has access |
 | sops/age | `age-keygen -o ~/.config/sops/age/keys.txt` | add the public key to `.sops.yaml`, run `sops updatekeys <file>` for every `*.sops.*` file from an old device, commit |
-| WireGuard | the WireGuard app generates a key pair | add a `[Peer]` with its public key to `wireguard_wg0_conf` (`sops secrets/homelab.sops.yml`), run `--tags wireguard` |
+| WireGuard | the WireGuard app scans the QR code | add a peer in WGDashboard (`https://vpn.home.<domain>`, user `admin`, password: SOPS `wgdashboard_admin_password`) and scan its QR code; nothing to deploy. Peers live on the LXC (`/etc/wireguard/wg0.conf`, `/var/lib/wgdashboard`); `wireguard_wg0_conf` in SOPS only seeds a new LXC |
 
 Remove a device: delete its key from the list / `.sops.yaml` and re-run; rotate the secrets it could read.
 

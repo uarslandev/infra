@@ -30,15 +30,17 @@
     sysctl_file: /etc/sysctl.d/99-wireguard.conf
     reload: true
 
-# SaveConfig=true would make wg-quick rewrite the file on every stop (drift vs. git), so it is forced off:
-# peers are managed in secrets/homelab.sops.yml.
-- name: WireGuard | wg0.conf from SOPS
+# Written only when missing (force: false): from then on WGDashboard (role wgdashboard) manages the peers,
+# and a re-write here would drop the ones added in its web UI. The SOPS copy seeds a new LXC.
+# SaveConfig=true would make wg-quick rewrite the file on every stop, so it is forced off.
+- name: WireGuard | wg0.conf from SOPS (first run only)
   ansible.builtin.copy:
     content: "{{ wireguard_wg0_conf | regex_replace('(?m)^SaveConfig\\s*=\\s*true\\s*$', 'SaveConfig = false') }}"
     dest: /etc/wireguard/wg0.conf
     owner: root
     group: root
     mode: "0600"
+    force: false
   no_log: true
   notify: Restart wg0
 

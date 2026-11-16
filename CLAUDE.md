@@ -10,7 +10,7 @@ This repo (`uarslandev/infra`, public) holds all infrastructure, as two separate
    `dotfiles/AGENTS.md`. Ask before changing this part.
 2. **Homelab as code**: `homelab.yml`, `inventories/homelab/` (always passed with `-i`; `ansible.cfg` sets no default
    inventory), roles (`common`, `ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`, `node_exporter`, `docker_host`,
-   `stacks`, `adguard`, `wireguard`), `stacks/`, `terraform/proxmox/`, `terraform/cloudflare/`, `secrets/`,
+   `stacks`, `adguard`, `wireguard`, `wgdashboard`), `stacks/`, `terraform/proxmox/`, `terraform/cloudflare/`, `secrets/`,
    `scripts/homelab/`, `docs/homelab/`. Only run explicitly. Start with `docs/homelab/README.md`.
 
 The two projects never share roles or vars (both have e.g. a `wireguard` role); run dev-env Ansible from `dotfiles/`.

@@ -1,0 +1,133 @@
+---
+# WGDashboard runs as root next to wg0 (it calls wg and wg-quick) and manages the peers in
+# /etc/wireguard/wg0.conf. The wireguard role writes that file from SOPS only when it is missing,
+# so peers added in the web UI are kept. A dry run (--check) of the first install stops after the
+# download: the later steps read the unpacked release.
+
+- name: WGDashboard | Packages
+  ansible.builtin.apt:
+    name:
+      - python3-venv
+      - net-tools
+      # The release ships no built web frontend; Ubuntu's Node.js 22 meets its >=22.12.
+      - nodejs
+      - npm
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: WGDashboard | Release directory
+  ansible.builtin.file:
+    path: "{{ wgdashboard_root }}/releases"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: WGDashboard | Download pinned release
+  ansible.builtin.get_url:
+    url: "https://github.com/WGDashboard/WGDashboard/archive/refs/tags/{{ wgdashboard_version }}.tar.gz"
+    dest: "{{ wgdashboard_root }}/releases/{{ wgdashboard_version }}.tar.gz"
+    checksum: "sha256:{{ wgdashboard_sha256 }}"
+    mode: "0644"
+
+- name: WGDashboard | Unpack
+  ansible.builtin.unarchive:
+    src: "{{ wgdashboard_root }}/releases/{{ wgdashboard_version }}.tar.gz"
+    dest: "{{ wgdashboard_root }}/releases"
+    remote_src: true
+    creates: "{{ wgdashboard_src }}/dashboard.py"
+
+# Once per release: about 400 MB of node_modules and 600 MB of memory at the peak, then removed.
+- name: WGDashboard | Build the web frontends (admin, client)
+  ansible.builtin.shell:
+    cmd: >-
+      npm ci --ignore-scripts --no-audit --no-fund --loglevel=error
+      && npm run build
+      && rm -rf node_modules
+      && npm cache clean --force
+    chdir: "{{ wgdashboard_src }}/static/{{ item.dir }}"
+    creates: "{{ wgdashboard_src }}/static/dist/{{ item.built }}"
+  loop:
+    - { dir: app, built: WGDashboardAdmin/index.html }
+    - { dir: client, built: WGDashboardClient/client.html }
+
+- name: WGDashboard | Python packages (pinned in its requirements.txt)
+  ansible.builtin.pip:
+    requirements: "{{ wgdashboard_src }}/requirements.txt"
+    virtualenv: "{{ wgdashboard_src }}/venv"
+    virtualenv_command: python3 -m venv
+
+- name: WGDashboard | Data and log directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  loop:
+    - "{{ wgdashboard_data_dir }}"
+    - "{{ wgdashboard_data_dir }}/db"
+    - "{{ wgdashboard_src }}/log"
+    - "{{ wgdashboard_src }}/download"
+
+- name: WGDashboard | The home's public IPv4, for new peers' endpoint
+  ansible.builtin.uri:
+    url: https://cloudflare.com/cdn-cgi/trace
+    return_content: true
+  register: wgdashboard_trace
+  check_mode: false # a read-only lookup
+  when: wgdashboard_remote_endpoint | length == 0
+
+- name: WGDashboard | Endpoint for new peers
+  ansible.builtin.set_fact:
+    wgdashboard_endpoint: >-
+      {{ wgdashboard_remote_endpoint if wgdashboard_remote_endpoint | length > 0
+      else (wgdashboard_trace.content.splitlines() | select('match', '^ip=') | first | regex_replace('^ip=', '')) }}
+
+- name: WGDashboard | Settings helper
+  ansible.builtin.copy:
+    src: set-settings.py
+    dest: /usr/local/sbin/wgdashboard-set-settings
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: WGDashboard | Settings and the admin account (password from SOPS)
+  ansible.builtin.command:
+    argv:
+      - "{{ wgdashboard_src }}/venv/bin/python3"
+      - /usr/local/sbin/wgdashboard-set-settings
+      - "{{ wgdashboard_data_dir }}/wg-dashboard.ini"
+    stdin: "{{ {'settings': wgdashboard_settings, 'password': wgdashboard_admin_password} | to_json }}"
+  register: wgdashboard_settings_result
+  changed_when: wgdashboard_settings_result.stdout == 'changed'
+  no_log: true
+
+# WGDashboard opens wg-dashboard.ini and db/ in its working directory (DatabaseConnection.py ignores
+# CONFIGURATION_PATH), so both live in the data directory and are linked into the release.
+- name: WGDashboard | Settings and databases linked into the release
+  ansible.builtin.file:
+    src: "{{ wgdashboard_data_dir }}/{{ item }}"
+    dest: "{{ wgdashboard_src }}/{{ item }}"
+    state: link
+  loop:
+    - wg-dashboard.ini
+    - db
+  notify: Restart WGDashboard
+
+- name: WGDashboard | Service
+  ansible.builtin.template:
+    src: wg-dashboard.service.j2
+    dest: /etc/systemd/system/wg-dashboard.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart WGDashboard
+
+- name: WGDashboard | Enable and start
+  ansible.builtin.systemd_service:
+    name: wg-dashboard
+    enabled: true
+    state: started
+    daemon_reload: true

@@ -27,7 +27,8 @@ infra/
 │   ├── docker_host           Docker, log rotation, virtiofs mounts
 │   ├── stacks                deploys every stack → [[Apps VM and stacks#The stacks role]]
 │   ├── adguard               AdGuard Home + DNS rewrites
-│   └── wireguard             the VPN
+│   ├── wireguard             the VPN
+│   └── wgdashboard           its web UI (WGDashboard)
 ├── stacks/<app>/compose.yml  one Docker Compose file per app, versions pinned
 ├── terraform/
 │   ├── proxmox/              VM, LXCs, images, shares → [[Tools#Terraform]]

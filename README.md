@@ -42,7 +42,7 @@ make homelab-lint                       Before every homelab commit
 ├── ansible.cfg                  # Homelab; no default inventory: always -i inventories/homelab (the Makefile does)
 ├── inventories/homelab/         # Homelab inventory + group_vars
 ├── roles/                       # Homelab roles: common, ssh_access, proxmox_host, zfs_datasets, sanoid,
-│                                # node_exporter, docker_host, stacks, adguard, wireguard
+│                                # node_exporter, docker_host, stacks, adguard, wireguard, wgdashboard
 ├── stacks/<service>/compose.yml # Docker Compose stacks with pinned image versions
 ├── terraform/proxmox/           # bpg/proxmox: Ubuntu cloud image, apps VM, LXCs, virtiofs shares
 ├── terraform/cloudflare/        # Cloudflare Tunnel routes + DNS

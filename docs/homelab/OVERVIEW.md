@@ -26,7 +26,7 @@ Admin PC / laptop (WSL)  ── git push ──►  GitHub uarslandev/infra  ◄
 Proxmox host ── ZFS tank (mirror): immich · nextcloud · jellyfin · syncthing · appdata · apex · legacy
    ├─ VM  110 apps       Docker: Traefik · Immich · Nextcloud · Jellyfin · Syncthing · Monitoring · APEX · cloudflared
    ├─ LXC 120 adguard    LAN DNS (*.home.<domain> -> apps)
-   └─ LXC 121 wireguard  VPN for access from outside
+   └─ LXC 121 wireguard  VPN for access from outside, managed in WGDashboard
 ```
 
 ## The tools
@@ -48,7 +48,7 @@ Read every plan: `destroy`/`replace` means look twice. Auth: Proxmox API token f
 Connects over SSH and makes each machine match the repo. Idempotent: a second run reports `changed=0` (that is also the
 drift test). Layout: `inventories/homelab/hosts.yml` (which machines), `group_vars/*.yml` (settings: datasets, snapshot
 policies, stacks, DNS rewrites, routes), `roles/` (how: `ssh_access`, `proxmox_host`, `zfs_datasets`, `sanoid`,
-`node_exporter`, `docker_host`, `stacks`, `adguard`, `wireguard`), `homelab.yml` (which roles on which machines).
+`node_exporter`, `docker_host`, `stacks`, `adguard`, `wireguard`, `wgdashboard`), `homelab.yml` (which roles on which machines).
 Tags: `proxmox`, `apps`, `adguard`, `wireguard`. Always `ANSIBLE_CONFIG=ansible.cfg` (the Make targets set it).
 
 ### SOPS + age
@@ -123,7 +123,7 @@ ansible-galaxy collection install -r requirements/homelab.yml
 make ssh-config          # ssh proxmox / apps / adguard / wireguard
 make tf-restore-state
 ```
-From outside: connect WireGuard first (add a `[Peer]` for the device in `wireguard_wg0_conf` via sops), then it is the same as at home.
+From outside: connect WireGuard first (add a peer for the device in WGDashboard, `https://vpn.home.<domain>`), then it is the same as at home.
 
 ### Emergency kit (KeePass + printout)
 age key · recovery SSH key + passphrase · Proxmox root password + 2FA recovery codes · GitHub login + 2FA codes ·

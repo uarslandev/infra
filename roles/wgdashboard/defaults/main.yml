@@ -1,0 +1,22 @@
+---
+# WGDashboard: the web UI for the WireGuard VPN, next to wg0 on the WireGuard LXC, at
+# https://vpn.<local domain> through Traefik (LAN/VPN only, never a tunnel route).
+# Upgrade: a new tag and the sha256 of GitHub's source tarball for it, then --tags wireguard.
+wgdashboard_version: v4.3.4
+wgdashboard_sha256: c43d7e50aa2c26f7cae20deddeccc16837fcd9f40d9b0104a357d4e8332bca31
+wgdashboard_root: /opt/wgdashboard
+# wg-dashboard.ini and its SQLite databases (peer names, the keys of peers made here), linked into each
+# release, so an upgrade keeps them.
+wgdashboard_data_dir: /var/lib/wgdashboard
+wgdashboard_port: 10086
+# Only Traefik (on the apps VM) may connect: the login then always goes over HTTPS.
+wgdashboard_allowed_source: "{{ homelab_apps_ip }}"
+# The password is the SOPS secret wgdashboard_admin_password; a change made in the web UI is reset on the
+# next run, so change it in SOPS. Two-factor (TOTP) can be turned on in the web UI and is kept.
+wgdashboard_username: admin
+# What new peers get (each can be changed per peer): AdGuard as DNS (the *.home names, ad blocking) and
+# the whole internet through home. The endpoint is the home's public IPv4, looked up on every run, unless
+# set here (e.g. to a DNS name).
+wgdashboard_peer_dns: 192.168.0.162
+wgdashboard_peer_allowed_ips: 0.0.0.0/0
+wgdashboard_remote_endpoint: ""

@@ -62,7 +62,7 @@ More: [[Cloudflare]].
 | --- | --- | --- |
 | SSH | `ssh-keygen -t ed25519 -C "<device>"`, then `make ssh-config` | add the `.pub` line to `ssh_access_authorized_keys` (`group_vars/all.yml`), `make homelab` from a device with access |
 | Secrets | copy the age key from KeePass to `~/.config/sops/age/keys.txt` (`chmod 600`) | — or a new key: add its public key to `.sops.yaml`, `sops updatekeys` every `*.sops.*` from an old device |
-| VPN | the WireGuard app makes a key pair | add a `[Peer]` to `wireguard_wg0_conf` (`sops secrets/homelab.sops.yml`), `--tags wireguard` |
+| VPN | the WireGuard app scans the QR code | add a peer in WGDashboard (`https://vpn.home.<domain>`, user `admin`, password: SOPS `wgdashboard_admin_password`) and scan its QR code; nothing to deploy |
 
 ## New machine or fresh clone
 

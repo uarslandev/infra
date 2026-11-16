@@ -46,8 +46,14 @@ immich_server container
 
 ## WireGuard (LXC 121)
 
-- The VPN for reaching everything from outside, as if at home. Peers (your devices) are in the secret
-  `wireguard_wg0_conf` → [[Secrets]]; the role writes `/etc/wireguard/wg0.conf` and starts `wg0`.
+- The VPN for reaching everything from outside, as if at home. The role writes `/etc/wireguard/wg0.conf`
+  from the secret `wireguard_wg0_conf` (→ [[Secrets]]) only when it is missing, and starts `wg0`.
+- **WGDashboard** (role `wgdashboard`) manages the peers (your devices) from then on:
+  `https://vpn.home.<domain>`, through Traefik with `lan-only`; its port 10086 only accepts Traefik's
+  address, so the login always goes over HTTPS. The release is pinned, its web frontend is built on the
+  LXC once per release (why the LXC has 2 GB), and its data is in `/var/lib/wgdashboard`. The admin
+  password is the secret `wgdashboard_admin_password` (a change made in the web UI is reset on the next
+  run); two-factor can be turned on in the UI. Peers added there are not in SOPS.
 - Its network is in `homelab_admin_networks`, so `lan-only` lets it through.
 - Quirk: Ubuntu's AppArmor profile for `wg-quick` breaks inside an unprivileged LXC; the role disables
   just that profile there.

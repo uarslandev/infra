@@ -1,0 +1,6 @@
+---
+- name: Restart WGDashboard
+  ansible.builtin.systemd_service:
+    name: wg-dashboard
+    state: restarted
+    daemon_reload: true

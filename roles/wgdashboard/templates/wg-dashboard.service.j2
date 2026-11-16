@@ -1,0 +1,20 @@
+# {{ ansible_managed }}
+[Unit]
+Description=WGDashboard (web UI for the WireGuard VPN)
+After=network-online.target wg-quick@wg0.service
+Wants=network-online.target
+
+[Service]
+# gunicorn.conf.py daemonizes and writes ./gunicorn.pid.
+Type=forking
+WorkingDirectory={{ wgdashboard_src }}
+PIDFile={{ wgdashboard_src }}/gunicorn.pid
+# Only Traefik on the apps VM may reach the port; everyone else uses https://vpn.<local domain>.
+ExecStartPre=/bin/sh -c 'iptables -C INPUT -p tcp --dport {{ wgdashboard_port }} ! -s {{ wgdashboard_allowed_source }} -j REJECT --reject-with tcp-reset 2>/dev/null || iptables -I INPUT -p tcp --dport {{ wgdashboard_port }} ! -s {{ wgdashboard_allowed_source }} -j REJECT --reject-with tcp-reset'
+ExecStart={{ wgdashboard_src }}/venv/bin/gunicorn --config ./gunicorn.conf.py
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target

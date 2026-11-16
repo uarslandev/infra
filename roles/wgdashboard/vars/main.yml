@@ -1,0 +1,23 @@
+---
+# GitHub's source tarball unpacks to WGDashboard-<version without the v>/.
+wgdashboard_src: "{{ wgdashboard_root }}/releases/WGDashboard-{{ wgdashboard_version | regex_replace('^v', '') }}/src"
+
+# The settings this role owns in wg-dashboard.ini; everything else stays as the web UI leaves it.
+wgdashboard_settings:
+  Account:
+    username: "{{ wgdashboard_username }}"
+  Server:
+    app_ip: "{{ ansible_facts['default_ipv4']['address'] }}"
+    app_port: "{{ wgdashboard_port | string }}"
+    auth_req: "true"
+    wg_conf_path: /etc/wireguard
+    dashboard_api_key: "false"
+  Peers:
+    peer_global_dns: "{{ wgdashboard_peer_dns }}"
+    peer_endpoint_allowed_ip: "{{ wgdashboard_peer_allowed_ips }}"
+    remote_endpoint: "{{ wgdashboard_endpoint }}"
+  Other:
+    welcome_session: "false" # the account is set here, so no first-login wizard
+  Clients:
+    enable: "false" # the self-service client portal (with sign-up) stays off
+    sign_up: "false"
