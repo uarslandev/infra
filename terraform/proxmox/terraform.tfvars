@@ -40,7 +40,7 @@ containers = {
     vm_id     = 121
     ip        = "192.168.0.93"
     cores     = 1
-    memory_mb = 512
+    memory_mb = 2048
     disk_gb   = 4
   }
 }
