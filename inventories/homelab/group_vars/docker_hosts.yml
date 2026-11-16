@@ -104,3 +104,4 @@ alert_smtp_smarthost: smtp.gmail.com:587
 traefik_external_routes:
   - { name: proxmox, url: "https://192.168.0.123:8006", insecure_tls: true }
   - { name: adguard, url: "http://192.168.0.162:80" }
+  - { name: vpn, url: "http://192.168.0.93:10086" } # WGDashboard on the WireGuard LXC (role wgdashboard)
