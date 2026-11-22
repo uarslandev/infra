@@ -39,7 +39,7 @@ stacks_root: /opt/stacks
 # APEX sync server: image built on the VM from this commit of the private repo (read-only deploy key
 # apex_deploy_key in secrets/homelab.sops.yml). Upgrade = new commit here, then --tags apps.
 apex_repo: git@github.com:uarslandev/apex.git
-apex_version: 298d8848c8bb0f72b888e78a7b56ff7f6eb62960
+apex_version: 9268892be9ab1fff620f484f7905a81dd3dfeda0
 apex_uid: 10090 # unprivileged PocketBase user; owns /srv/apex/pb_data
 # APEX mail (sign-up confirmation, password reset). Gmail SMTP with an app
 # password, the same arrangement as the alert mail below. The key is the secret
